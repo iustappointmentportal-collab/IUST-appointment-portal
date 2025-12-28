@@ -6,14 +6,19 @@
     <title>IUST Appointment Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
-        :root { --primary: #2c3e50; --primary-dark: #1d2834; --secondary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --light: #f4f7fa; --gray: #95a5a6; --faculty: #8e44ad; --student: #16a085; --border-color: #e9ecef; }
+        :root { 
+            --primary: #2c3e50; --primary-dark: #1d2834; --secondary: #3498db; --success: #2ecc71; 
+            --warning: #f39c12; --danger: #e74c3c; --light: #f4f7fa; --gray: #95a5a6; 
+            --faculty: #8e44ad; --student: #16a085; --border-color: #e9ecef; 
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light); color: var(--primary); min-height: 100vh; line-height: 1.6; }
         .hidden { display: none !important; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Login Styles */
+
         #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background: linear-gradient(135deg, #1d2834 0%, #2c3e50 100%); }
         .login-container { max-width: 500px; width: 100%; background-color: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 2rem; }
         .login-options { display: flex; gap: 1rem; margin-bottom: 2rem; }
@@ -24,11 +29,12 @@
         .form-group { margin-bottom: 1.5rem; }
         .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; text-align: left; }
         .form-control { width: 100%; padding: 0.8rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        
         .btn { padding: 0.8rem 1.5rem; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; transition: all 0.3s ease; width: 100%; font-size: 1rem; }
         .btn:hover { filter: brightness(110%); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .btn-primary { background-color: var(--secondary); } .btn-secondary { background-color: var(--gray); } .btn-success { background-color: var(--success); } .btn-danger { background-color: var(--danger); } .btn-warning { background-color: var(--warning); }
         .btn-sm { padding: 0.5rem 1rem; font-size: 0.9rem; width: auto; }
-        /* Dashboard Styles */
+        
         header { background-color: white; color: var(--primary); padding: 0 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; min-height: 70px; }
         .logo { display: flex; align-items: center; gap: 1rem; } .logo img { height: 40px; } .logo h1 { font-size: 1.3rem; font-weight: 600; }
@@ -36,7 +42,9 @@
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--secondary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background-size: cover; background-position: center; }
         #logout-button { background: none; border: none; color: var(--primary-dark); cursor: pointer; padding: 0.5rem 0.8rem; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
         #logout-button:hover { background: var(--light); }
+
         .nav-toggle-btn { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--primary-dark); padding: 0.5rem; }
+        
         main { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
         .dashboard { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; }
         .sidebar { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 1.5rem; height: fit-content; position: sticky; top: 90px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
@@ -49,23 +57,68 @@
         .content-section { display: none; } .content-section.active { display: block; animation: fadeIn 0.3s ease; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
         .section-header h2 { font-size: 1.8rem; font-weight: 600; }
-        /* Tables & Lists */
+
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { font-weight: 600; font-size: 0.9rem; color: #555; }
         .status { padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; color: white; text-transform: capitalize; font-weight: 500; }
         .status.approved { background-color: var(--success); } .status.pending { background-color: var(--warning); } .status.rejected { background-color: var(--danger); } .status.rescheduled { background-color: var(--faculty); }
         .action-buttons { display: flex; gap: 0.5rem; }
+        
         .quick-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem; }
         .stat-card { background: var(--light); padding: 1.5rem; border-radius: 8px; text-align: center; }
         .stat-card h3 { font-size: 0.9rem; color: #7f8c8d; } .stat-number { font-size: 2.5rem; font-weight: bold; }
+        
         .faculty-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
         .faculty-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; display: flex; flex-direction: column; }
         .faculty-card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
         .faculty-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background-color: var(--light); }
         .faculty-info h3 { font-size: 1.1rem; } .faculty-info .department { color: #7f8c8d; font-size: 0.9rem; }
         .faculty-card .book-appointment-btn { margin-top: auto; width: 100%; }
-        /* Profile & Avail Styles */
+
+        /* --- OFFICE BOX STYLES --- */
+        .office-location-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .office-location-text {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 65%;
+        }
+        .nav-btn-small {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .nav-btn-small:hover { background-color: #2980b9; }
+
+        .office-location-info { display: flex; justify-content: space-between; align-items: center; background-color: var(--light); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.9rem; }
+        .nav-link-btn { background-color: var(--secondary); color: white; padding: 0.3rem 0.8rem; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: background-color 0.2s; }
+        .nav-link-btn:hover { background-color: var(--primary-dark); }
+        .nav-link-btn .fa-map-marker-alt { margin-right: 0.4rem; }
+
         .profile-card { max-width: 600px; }
         .profile-header { text-align: center; margin-bottom: 1.5rem; position: relative; }
         .profile-photo-container { position: relative; display: inline-block; }
@@ -74,10 +127,7 @@
         #change-photo-btn:hover { background-color: var(--secondary); color: white; transform: scale(1.1); }
         .profile-details .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #ecf0f1; }
         .profile-details .detail-item label { font-weight: bold; min-width: 120px; }
-        .office-location-info { display: flex; justify-content: space-between; align-items: center; background-color: var(--light); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.9rem; }
-        .nav-link-btn { background-color: var(--secondary); color: white; padding: 0.3rem 0.8rem; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: background-color 0.2s; }
-        .nav-link-btn:hover { background-color: var(--primary-dark); }
-        .nav-link-btn .fa-map-marker-alt { margin-right: 0.4rem; }
+
         .availability-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 1rem; user-select: none; }
         .availability-table th, .availability-table td { border: 1px solid var(--border-color); padding: 0.5rem; text-align: center; vertical-align: middle; }
         .availability-table th { background-color: var(--light); font-weight: 600; font-size: 0.9rem; padding: 0.8rem 0.5rem; }
@@ -85,7 +135,7 @@
         .availability-table .time-slot { height: 50px; background-color: #fff; cursor: pointer; transition: all 0.2s ease; }
         .availability-table .time-slot:hover { background-color: #ecf0f1; transform: scale(1.05); }
         .availability-table .time-slot.available { background-color: var(--success); } .availability-table .time-slot.available:hover { background-color: #27ae60; }
-        /* Swal & Mobile */
+
         .swal-label { display: block; text-align: left; font-weight: bold; margin-bottom: 0.5rem; }
         .swal-input { width: 100% !important; margin-bottom: 1rem; }
         .swal2-html-container { overflow: visible !important; text-align: left !important; }
@@ -94,9 +144,41 @@
         .time-slot-btn:hover { background-color: var(--light); border-color: var(--secondary); }
         .time-slot-btn.selected { background-color: var(--success); color: white; border-color: var(--success); font-weight: 500; }
         .no-slots { color: var(--gray); font-style: italic; }
+        
+        .swal-faculty-profile { text-align: left; }
+        .swal-faculty-profile .profile-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .swal-faculty-profile .profile-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+        .swal-faculty-profile h3 { margin: 0; }
+        .swal-faculty-profile .department { color: #7f8c8d; }
+        .swal-faculty-profile .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.5rem; margin: 1rem 0; }
+        .swal-faculty-profile .detail-item { padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); }
+        .swal-faculty-profile .detail-item strong { color: var(--primary-dark); }
+        .swal-faculty-profile .availability-section h4 { margin-top: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        .swal-faculty-profile .availability-list { list-style: none; padding: 0; font-size: 0.9rem; }
+        .swal-faculty-profile .availability-list li { padding: 0.25rem 0; }
+
         #backdrop-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
         #backdrop-overlay.active { opacity: 1; visibility: visible; }
+        
+        /* Sidebar Media Query */
         @media (max-width: 992px) { .dashboard { grid-template-columns: 1fr; } .sidebar { position: fixed; left: 0; top: 0; height: 100%; width: 280px; z-index: 1001; transform: translateX(-100%); border-radius: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } .sidebar.active { transform: translateX(0); } .content { order: 1; } .nav-toggle-btn { display: block; } }
+
+        /* --- MOBILE OPTIMIZATIONS --- */
+        @media (max-width: 768px) {
+            .logo h1 { display: none; }
+            #logout-button span { display: none; }
+            #logout-button { padding: 0.5rem; }
+            .user-info { gap: 0.5rem; }
+            .user-avatar { width: 35px; height: 35px; font-size: 0.9rem; }
+            .faculty-grid { grid-template-columns: 1fr; }
+            .quick-stats { grid-template-columns: 1fr; }
+            .content-section { overflow-x: hidden; }
+        }
+
+        @media (max-width: 480px) {
+            .login-container { padding: 1.5rem; }
+            .login-options h3 { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
@@ -126,7 +208,6 @@
         </div>
     </div>
 
-    <!-- Main Application Container -->
     <div id="dashboard-container" class="hidden">
         <div id="backdrop-overlay"></div>
         <header>
@@ -139,7 +220,7 @@
                 <div class="user-info">
                     <span id="welcome-message"></span>
                     <div class="user-avatar" id="user-avatar"></div>
-                    <button id="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <button id="logout-button"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></button>
                 </div>
             </div>
         </header>
@@ -164,8 +245,9 @@
     </div>
 
 <script>
-   const API_BASE_URL = '/api';
-   const BASE_URL = '';
+    const API_BASE_URL = '/api';
+    const BASE_URL = '';
+    
     let state = { currentUser: null, faculty: [], appointments: [], availability: {}, selectedRole: 'student' };
     let tempRegistrationData = {};
     const getElem = (id) => document.getElementById(id);
@@ -213,7 +295,6 @@
         
         getElem('profile-content').addEventListener('click', e => { 
             if (e.target.closest('#change-photo-btn')) showUploadAvatarModal(); 
-            // --- UPDATED: Listener for Sync Location Button ---
             if (e.target.closest('#sync-location-btn')) handleSyncLocation();
         });
 
@@ -255,60 +336,146 @@
         const filtered = state.faculty.filter(f => (!dept || f.department === dept) && (!query || f.name.toLowerCase().includes(query)));
         if (filtered.length === 0) { container.innerHTML = '<p>No faculty found.</p>'; return; }
         container.innerHTML = filtered.map(f => {
-            const mapUrl = f.office && f.office.startsWith('http') ? f.office : `https://www.google.com/maps?q=${encodeURIComponent('IUST, Awantipora, ' + f.office)}`;
+            const mapUrl = f.office && f.office.startsWith('http') ? f.office : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('IUST, Awantipora, ' + (f.office || ''))}`;
             const officeDisplay = f.office && f.office.startsWith('http') ? 'View Map Location' : (f.office || 'N/A');
             const officeHtml = f.office ? `<div class="office-location-info"><span><i class="fas fa-map-pin"></i> ${officeDisplay}</span><a href="${mapUrl}" target="_blank" class="nav-link-btn"><i class="fas fa-map-marker-alt"></i> Nav</a></div>` : '<p><strong>Office:</strong> N/A</p>';
             return `<div class="faculty-card"><div class="faculty-card-header"><img src="${f.avatar_url ? BASE_URL + f.avatar_url : `https://i.pravatar.cc/150?u=${f.email}`}" class="faculty-photo"><div class="faculty-info"><h3>${f.name}</h3><p class="department">${f.designation||'Faculty'}</p></div></div><p><strong>Department:</strong> ${f.department}</p>${officeHtml}<div class="action-buttons" style="margin-top: auto; padding-top: 1rem;"><button class="btn btn-sm btn-secondary view-profile-btn" data-faculty-id="${f.id}" style="flex-grow: 1;">View Profile</button><button class="btn btn-sm btn-primary book-appointment-btn" data-faculty-id="${f.id}" style="flex-grow: 1;">Book</button></div></div>`;
         }).join(''); 
     }
 
-    async function showNewAppointmentModal(fid = null) {
+    async function showNewAppointmentModal(facultyId = null) {
         if (state.faculty.length === 0) await loadFacultyData();
-        const fOptions = state.faculty.map(f => `<option value="${f.id}" ${f.id == fid ? 'selected' : ''}>${f.name}</option>`).join('');
-        Swal.fire({ title: 'Book Appointment', html: `<select id="swal-fid" class="swal2-input">${fOptions}</select><input id="swal-date" type="date" class="swal2-input" min="${new Date().toISOString().split('T')[0]}"><div id="swal-slots" class="time-slots-container"></div><textarea id="swal-purpose" class="swal2-textarea" placeholder="Purpose"></textarea>`, didOpen: () => {
-            const dInput = getElem('swal-date'); const sCont = getElem('swal-slots');
-            dInput.addEventListener('change', async () => {
-                const date = dInput.value; const fid = getElem('swal-fid').value;
-                if (!date || new Date(date).getDay() % 6 === 0) { sCont.innerHTML = '<p class="no-slots">Select a weekday.</p>'; return; }
+
+        async function renderTimeSlots(fid, date, slotsContainer) {
+            if (!fid || !date) { slotsContainer.innerHTML = '<p class="no-slots">Please select a faculty and a date.</p>'; return; }
+            try {
+                slotsContainer.innerHTML = '<p class="no-slots">Loading slots...</p>';
                 const profile = await apiRequest(`/faculty/${fid}`);
-                const day = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-                const slots = profile.availability?.[day] || [];
-                sCont.innerHTML = slots.length ? slots.map(t => `<button class="time-slot-btn" onclick="this.parentNode.querySelectorAll('.selected').forEach(e=>e.classList.remove('selected'));this.classList.add('selected');">${t}</button>`).join('') : 'No slots.';
-            });
-        }, preConfirm: () => { return { facultyId: getElem('swal-fid').value, date: getElem('swal-date').value, time: getElem('swal-slots').querySelector('.selected')?.textContent, purpose: getElem('swal-purpose').value }; }
-        }).then(async r => { if(r.value && r.value.time) { await apiRequest('/appointments', 'POST', r.value); Swal.fire('Booked!', '', 'success'); loadDashboardData(); } });
+                const selectedDate = new Date(date);
+                const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][selectedDate.getUTCDay()];
+                
+                if (selectedDate.getUTCDay() === 0 || selectedDate.getUTCDay() === 6) {
+                    slotsContainer.innerHTML = `<p class="no-slots" style="color:var(--danger);">No appointments available on ${dayOfWeek}.</p>`; return;
+                }
+                const availableTimes = (profile.availability && profile.availability[dayOfWeek]) ? profile.availability[dayOfWeek] : [];
+                slotsContainer.innerHTML = availableTimes.length ? availableTimes.sort().map(time => `<button type="button" class="time-slot-btn" data-time="${time}">${time}</button>`).join('') : '<p class="no-slots">No available slots.</p>';
+            } catch (error) { slotsContainer.innerHTML = `<p class="no-slots" style="color:var(--danger);">Error loading slots.</p>`; }
+        }
+
+        let selectedTime = null;
+        const facultyOptions = state.faculty.map(f => `<option value="${f.id}" ${f.id == facultyId ? 'selected' : ''}>${f.name} - ${f.department}</option>`).join('');
+        
+        Swal.fire({
+            title: 'Book a New Appointment',
+            html: `<form id="booking-form" style="text-align: left;">
+                       <div class="form-group" style="margin-bottom: 1rem;">
+                           <label for="swal-faculty-id" class="form-label" style="font-weight: 600;">Faculty</label>
+                           <select id="swal-faculty-id" class="form-control" style="font-size: 0.95rem;">${facultyOptions}</select>
+                           <div id="swal-office-location"></div>
+                       </div>
+                       <div class="form-group" style="margin-bottom: 1rem;">
+                           <label for="swal-date" class="form-label" style="font-weight: 600;">Date</label>
+                           <input type="date" id="swal-date" class="form-control" style="font-size: 0.95rem;">
+                       </div>
+                       <div class="form-group" style="margin-bottom: 1rem;">
+                           <label class="form-label" style="font-weight: 600;">Available Time Slots</label>
+                           <div id="swal-slots-container" class="time-slots-container"><p class="no-slots" style="color: #999; font-style: italic;">Please select both a faculty and a date.</p></div>
+                       </div>
+                       <div class="form-group">
+                           <label for="swal-purpose" class="form-label" style="font-weight: 600;">Purpose of Appointment</label>
+                           <textarea id="swal-purpose" class="form-control" rows="3" placeholder="Briefly describe the purpose..." style="font-size: 0.95rem; font-family: inherit;"></textarea>
+                       </div>
+                      </form>`,
+            width: '600px', 
+            showCancelButton: true, 
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Submit Request',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#6c5ce7',
+            cancelButtonColor: '#636e72',
+            didOpen: () => {
+                const fSelect = document.getElementById('swal-faculty-id');
+                const dInput = document.getElementById('swal-date');
+                const sCont = document.getElementById('swal-slots-container');
+                const officeContainer = document.getElementById('swal-office-location');
+                
+                const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+                dInput.setAttribute('min', tomorrow.toISOString().split('T')[0]);
+                
+                const updateOfficeLocation = (selectedFacultyId) => {
+                    const faculty = state.faculty.find(f => f.id == selectedFacultyId);
+                    if (faculty && faculty.office) {
+                        const isUrl = faculty.office.startsWith('http');
+                        const mapUrl = isUrl ? faculty.office : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('IUST, Awantipora, ' + faculty.office)}`;
+                        
+                        // --- UPDATED LOGIC HERE ---
+                        // If it's a URL, show "View Map Location" instead of "Floor No: ..."
+                        const locationText = isUrl ? "View Map Location" : `Floor No: ${faculty.office}`;
+                        
+                        officeContainer.innerHTML = `
+                            <div class="office-location-box">
+                                <div class="office-location-text" title="${faculty.office}">
+                                    <i class="fas fa-building" style="color: #666;"></i> 
+                                    <span>${locationText}</span>
+                                </div>
+                                <a href="${mapUrl}" target="_blank" class="nav-btn-small">
+                                    <i class="fas fa-location-arrow"></i> Show Navigation
+                                </a>
+                            </div>`;
+                    } else { officeContainer.innerHTML = ''; }
+                };
+
+                const updateAll = () => {
+                    const fid = fSelect.value; const date = dInput.value; selectedTime = null;
+                    updateOfficeLocation(fid);
+                    if (!fid || !date) { sCont.innerHTML = '<p class="no-slots" style="color: #999; font-style: italic;">Please select both a faculty and a date.</p>'; return; }
+                    const d = new Date(date);
+                    if (d.getUTCDay() === 0 || d.getUTCDay() === 6) { sCont.innerHTML = '<p class="no-slots" style="color:var(--danger);">Please select a weekday.</p>'; return; }
+                    renderTimeSlots(fid, date, sCont);
+                };
+
+                fSelect.addEventListener('change', updateAll);
+                dInput.addEventListener('input', updateAll);
+                sCont.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.time-slot-btn');
+                    if (btn) { sCont.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedTime = btn.dataset.time; }
+                });
+                updateAll();
+            },
+            preConfirm: () => {
+                const fid = document.getElementById('swal-faculty-id').value;
+                const date = document.getElementById('swal-date').value;
+                const purpose = document.getElementById('swal-purpose').value;
+                if (!fid || !date || !purpose || !selectedTime) { Swal.showValidationMessage('Please fill all fields and select a time slot.'); return false; }
+                return { facultyId: fid, date, time: selectedTime, purpose };
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                apiRequest('/appointments', 'POST', result.value).then(() => { Swal.fire('Success!', 'Your appointment request has been sent.', 'success'); loadAppointmentsData(); loadDashboardData(); }).catch(error => Swal.fire('Error', error.message, 'error'));
+            }
+        });
     }
 
     async function showFacultyProfileModal(id) {
         const p = await apiRequest(`/faculty/${id}`);
-        const mapUrl = p.office && p.office.startsWith('http') ? p.office : `https://www.google.com/maps?q=${encodeURIComponent('IUST ' + p.office)}`;
+        const mapUrl = p.office && p.office.startsWith('http') ? p.office : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('IUST ' + (p.office || ''))}`;
         const officeText = p.office && p.office.startsWith('http') ? 'View Map Location' : (p.office || 'N/A');
         Swal.fire({ title: p.name, html: `<img src="${p.avatar_url ? BASE_URL + p.avatar_url : `https://i.pravatar.cc/150?u=${p.email}`}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;"><p>${p.designation}</p><p>${p.department}</p><p><a href="${mapUrl}" target="_blank">${officeText}</a></p>` });
     }
 
     async function loadProfileData() { const p = await apiRequest('/users/profile'); renderProfile(p); }
-    
-    // --- UPDATED RENDER PROFILE FUNCTION WITH SYNC BUTTON ---
     function renderProfile(p) {
         state.currentUser = p;
-        const c = getElem('profile-content');
-        if (!c) return;
-
+        const c = getElem('profile-content'); if (!c) return;
         const isStudent = p.role === 'student';
         const avatarSrc = p.avatar_url ? (BASE_URL + p.avatar_url) : `https://i.pravatar.cc/150?u=${p.email}`;
-        
         let calendarHtml = '';
-        if (p.role === 'faculty') {
-            calendarHtml = p.google_refresh_token ? `<div style="margin-top:1rem;color:green;"><i class="fas fa-check"></i> Calendar Linked</div>` : `<div style="margin-top:1rem;"><a href="/api/auth/google?token=${localStorage.getItem('authToken')}" class="btn btn-primary btn-sm">Link Calendar</a></div>`;
-        }
+        if (p.role === 'faculty') { calendarHtml = p.google_refresh_token ? `<div style="margin-top:1rem;color:green;"><i class="fas fa-check"></i> Calendar Linked</div>` : `<div style="margin-top:1rem;"><a href="/api/auth/google?token=${localStorage.getItem('authToken')}" class="btn btn-primary btn-sm">Link Calendar</a></div>`; }
         
-        // --- Updated Office Logic ---
         let officeHtml = '';
         if (p.role === 'faculty') {
             const officeVal = p.office || 'Not set';
             const isLink = officeVal.startsWith('http');
             const displayVal = isLink ? `<a href="${officeVal}" target="_blank">View on Map</a>` : officeVal;
-
             officeHtml = `
             <div class="detail-item" style="align-items: flex-start;">
                 <label style="padding-top: 5px;">Office:</label>
@@ -320,27 +487,16 @@
                 </div>
             </div>`;
         }
-
-        c.innerHTML = `<div class="profile-card">
-            <div class="profile-header"><div class="profile-photo-container"><img src="${avatarSrc}" class="profile-photo"><button id="change-photo-btn"><i class="fas fa-camera"></i></button></div><h3>${p.name}</h3><p>${p.role}</p></div>
-            <div class="profile-details">
-                <div class="detail-item"><label>Email:</label><span>${p.email}</span></div>
-                <div class="detail-item"><label>Phone:</label><span>${p.phone||'N/A'}</span></div>
-                <div class="detail-item"><label>Department:</label><span>${p.department||'N/A'}</span></div>
-                ${isStudent ? `<div class="detail-item"><label>Year:</label><span>${p.year_semester||'N/A'}</span></div>` : `<div class="detail-item"><label>Designation:</label><span>${p.designation||'N/A'}</span></div>${officeHtml}`}
-            </div>
-            ${calendarHtml}
-        </div>`;
+        c.innerHTML = `<div class="profile-card"><div class="profile-header"><div class="profile-photo-container"><img src="${avatarSrc}" class="profile-photo"><button id="change-photo-btn"><i class="fas fa-camera"></i></button></div><h3>${p.name}</h3><p>${p.role}</p></div><div class="profile-details"><div class="detail-item"><label>Email:</label><span>${p.email}</span></div><div class="detail-item"><label>Phone:</label><span>${p.phone||'N/A'}</span></div><div class="detail-item"><label>Department:</label><span>${p.department||'N/A'}</span></div>${isStudent ? `<div class="detail-item"><label>Year:</label><span>${p.year_semester||'N/A'}</span></div>` : `<div class="detail-item"><label>Designation:</label><span>${p.designation||'N/A'}</span></div>${officeHtml}`}</div>${calendarHtml}</div>`;
     }
-
-    // --- NEW SYNC LOCATION FUNCTION ---
+    
     async function handleSyncLocation() {
         const currentOffice = state.currentUser.office || '';
         const { value: result } = await Swal.fire({
             title: 'Sync Office Location',
             html: `
-                <p style="margin-bottom: 1rem; color: #666;">Enter office number or sync GPS coordinates.</p>
-                <input id="swal-location-input" class="swal2-input" placeholder="Location..." value="${currentOffice}">
+                <p style="margin-bottom: 1rem; color: #666;">Enter floor number (e.g. "2nd Floor") OR sync GPS.</p>
+                <input id="swal-location-input" class="swal2-input" placeholder="e.g. 2nd Floor, AB-I" value="${currentOffice}">
                 <button type="button" id="get-gps-btn" class="btn btn-warning" style="margin-top: 10px; width: 100%;">
                     <i class="fas fa-map-marker-alt"></i> Use My GPS Location
                 </button>
@@ -356,7 +512,7 @@
                     gpsBtn.disabled = true;
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
-                            input.value = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                            input.value = `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`;
                             gpsBtn.innerHTML = '<i class="fas fa-check"></i> Found!';
                             gpsBtn.className = 'btn btn-success';
                             gpsBtn.style.marginTop = '10px'; gpsBtn.style.width = '100%';
@@ -372,30 +528,15 @@
         if (result !== undefined) {
             try {
                 Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
-                // Note: We send other profile fields to avoid overwriting them with null if the backend expects full objects
-                const { user } = await apiRequest('/users/profile', 'PUT', { 
-                    office: result, name: state.currentUser.name, phone: state.currentUser.phone,
-                    department: state.currentUser.department, designation: state.currentUser.designation
-                });
+                const { user } = await apiRequest('/users/profile', 'PUT', { office: result });
                 renderProfile(user);
                 Swal.fire('Synced!', 'Location updated.', 'success');
             } catch (error) { Swal.fire('Error', error.message, 'error'); }
         }
     }
 
-    // --- ORIGINAL EDIT PROFILE MODAL (PRESERVED) ---
-    async function showEditProfileModal() { 
-        const p = state.currentUser; 
-        const isStudent = p.role === 'student'; 
-        const deptOptions = departmentsList.map(d => `<option value="${d}" ${p.department === d ? 'selected' : ''}>${d}</option>`).join(''); 
-        const studentFields = `<div class="form-group"><label class="swal-label" for="swal-year">Year/Semester</label><select id="swal-year" class="swal2-input">${['1st Year','2nd Year','3rd Year','4th Year'].map(y => `<option value="${y}" ${p.year_semester === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>`; 
-        const facultyFields = `<div class="form-group"><label class="swal-label" for="swal-designation">Designation</label><select id="swal-designation" class="swal2-input">${['Professor','Associate Professor','Assistant Professor'].map(d => `<option value="${d}" ${p.designation === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div><div class="form-group"><label class="swal-label" for="swal-office">Office (Manual Entry)</label><input id="swal-office" class="swal2-input" value="${p.office || ''}"></div>`; 
-        const { value: formValues } = await Swal.fire({ title: 'Edit My Profile', html: `<div class="form-group"><label class="swal-label" for="swal-name">Full Name</label><input id="swal-name" class="swal2-input" value="${p.name}"></div><div class="form-group"><label class="swal-label" for="swal-phone">Phone</label><input id="swal-phone" class="swal2-input" value="${p.phone || ''}"></div><div class="form-group"><label class="swal-label" for="swal-department">Department</label><select id="swal-department" class="swal2-input">${deptOptions}</select></div>${isStudent ? studentFields : facultyFields}`, showCancelButton: true, confirmButtonText: 'Save Changes', focusConfirm: false, preConfirm: () => { const values = { name: getElem('swal-name').value, phone: getElem('swal-phone').value, department: getElem('swal-department').value, }; if(isStudent) values.yearSemester = getElem('swal-year').value; else { values.designation = getElem('swal-designation').value; values.office = getElem('swal-office').value; } return values; } }); 
-        if (formValues) { try { const { user } = await apiRequest('/users/profile', 'PUT', formValues); localStorage.setItem('currentUser', JSON.stringify(user)); setupUserInterface(user); renderProfile(user); Swal.fire('Success!', 'Your profile has been updated.', 'success'); } catch (error) { Swal.fire('Error!', error.message, 'error'); } } 
-    }
-
+    async function showEditProfileModal() { const p = state.currentUser; const isStudent = p.role === 'student'; const deptOptions = departmentsList.map(d => `<option value="${d}" ${p.department === d ? 'selected' : ''}>${d}</option>`).join(''); const studentFields = `<div class="form-group"><label class="swal-label" for="swal-year">Year/Semester</label><select id="swal-year" class="swal2-input">${['1st Year','2nd Year','3rd Year','4th Year'].map(y => `<option value="${y}" ${p.year_semester === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>`; const facultyFields = `<div class="form-group"><label class="swal-label" for="swal-designation">Designation</label><select id="swal-designation" class="swal2-input">${['Professor','Associate Professor','Assistant Professor'].map(d => `<option value="${d}" ${p.designation === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div><div class="form-group"><label class="swal-label" for="swal-office">Office (Manual Entry)</label><input id="swal-office" class="swal2-input" value="${p.office || ''}"></div>`; const { value: formValues } = await Swal.fire({ title: 'Edit My Profile', html: `<div class="form-group"><label class="swal-label" for="swal-name">Full Name</label><input id="swal-name" class="swal2-input" value="${p.name}"></div><div class="form-group"><label class="swal-label" for="swal-phone">Phone</label><input id="swal-phone" class="swal2-input" value="${p.phone || ''}"></div><div class="form-group"><label class="swal-label" for="swal-department">Department</label><select id="swal-department" class="swal2-input">${deptOptions}</select></div>${isStudent ? studentFields : facultyFields}`, showCancelButton: true, confirmButtonText: 'Save Changes', focusConfirm: false, preConfirm: () => { const values = { name: getElem('swal-name').value, phone: getElem('swal-phone').value, department: getElem('swal-department').value, }; if(isStudent) values.yearSemester = getElem('swal-year').value; else { values.designation = getElem('swal-designation').value; values.office = getElem('swal-office').value; } return values; } }); if (formValues) { try { const { user } = await apiRequest('/users/profile', 'PUT', formValues); localStorage.setItem('currentUser', JSON.stringify(user)); setupUserInterface(user); renderProfile(user); Swal.fire('Success!', 'Your profile has been updated.', 'success'); } catch (error) { Swal.fire('Error!', error.message, 'error'); } } }
     async function showUploadAvatarModal() { const { value: file } = await Swal.fire({ title: 'Upload Photo', input: 'file' }); if (file) { const fd = new FormData(); fd.append('avatar', file); await apiRequest('/users/profile/avatar', 'POST', fd, false); loadProfileData(); } }
-    
     async function loadAvailabilityData() { const p = await apiRequest('/users/profile'); state.availability = p.availability || {}; renderAvailabilityGrid(); }
     function renderAvailabilityGrid() { const c = getElem('availability-grid-container'); if(!c) return; let h = '<table class="availability-table"><thead><tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr></thead><tbody>'; const times = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']; const days = ['monday','tuesday','wednesday','thursday','friday']; times.forEach(t => { h += `<tr><td>${t}</td>`; days.forEach(d => { const active = state.availability[d]?.includes(t) ? 'available' : ''; h += `<td class="time-slot ${active}" data-d="${d}" data-t="${t}"></td>`; }); h += '</tr>'; }); c.innerHTML = h + '</tbody></table>'; c.querySelector('tbody').addEventListener('click', e => { const td = e.target.closest('td'); if(!td.dataset.d) return; const {d,t} = td.dataset; if(state.availability[d]?.includes(t)) state.availability[d]=state.availability[d].filter(x=>x!==t); else (state.availability[d]||(state.availability[d]=[])).push(t); td.classList.toggle('available'); }); }
     async function handleSaveAvailability() { await apiRequest('/faculty/profile/availability', 'PUT', { availability: state.availability }); Swal.fire('Saved!', '', 'success'); }
@@ -409,5 +550,4 @@
     });
 </script>
 </body>
-</html>   
-
+</html>
