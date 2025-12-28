@@ -14,3 +14,9 @@ These features are handled by the following API endpoints:
 - `GET /api/users/profile`
 - `PUT /api/users/profile`
 - `PUT /api/faculty/profile/availability`
+## Installation
+
+1. Clone the repository.
+2. Run `npm install` to install dependencies.
+3. Rename `.env.example` to `.env` and fill in your credentials (PostgreSQL, Gmail App Password, Google Cloud Console keys).
+4. Run `npm run dev` to start the development server.
