@@ -1,0 +1,6 @@
+node_modules/
+.env
+.DS_Store
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep
+credentials/

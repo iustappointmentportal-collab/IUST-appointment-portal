@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IUST Appointment Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary: #2c3e50; --primary-dark: #1d2834; --secondary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --light: #f4f7fa; --gray: #95a5a6; --faculty: #8e44ad; --student: #16a085; --border-color: #e9ecef; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light); color: var(--primary); min-height: 100vh; line-height: 1.6; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Login Styles */
+        #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background: linear-gradient(135deg, #1d2834 0%, #2c3e50 100%); }
+        .login-container { max-width: 500px; width: 100%; background-color: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 2rem; }
+        .login-options { display: flex; gap: 1rem; margin-bottom: 2rem; }
+        .login-option { flex: 1; text-align: center; padding: 1.2rem 0.5rem; border-radius: 8px; cursor: pointer; border: 2px solid #eee; transition: all 0.3s ease; }
+        .login-option.active.faculty { border-color: var(--faculty); background-color: rgba(142,68,173,0.05); }
+        .login-option.active.student { border-color: var(--student); background-color: rgba(22,160,133,0.05); }
+        .login-option i { font-size: 2rem; margin-bottom: 0.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; text-align: left; }
+        .form-control { width: 100%; padding: 0.8rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        .btn { padding: 0.8rem 1.5rem; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; transition: all 0.3s ease; width: 100%; font-size: 1rem; }
+        .btn:hover { filter: brightness(110%); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-primary { background-color: var(--secondary); } .btn-secondary { background-color: var(--gray); } .btn-success { background-color: var(--success); } .btn-danger { background-color: var(--danger); } .btn-warning { background-color: var(--warning); }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.9rem; width: auto; }
+        /* Dashboard Styles */
+        header { background-color: white; color: var(--primary); padding: 0 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; min-height: 70px; }
+        .logo { display: flex; align-items: center; gap: 1rem; } .logo img { height: 40px; } .logo h1 { font-size: 1.3rem; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--secondary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background-size: cover; background-position: center; }
+        #logout-button { background: none; border: none; color: var(--primary-dark); cursor: pointer; padding: 0.5rem 0.8rem; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+        #logout-button:hover { background: var(--light); }
+        .nav-toggle-btn { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--primary-dark); padding: 0.5rem; }
+        main { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+        .dashboard { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; }
+        .sidebar { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 1.5rem; height: fit-content; position: sticky; top: 90px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .nav-section { margin-bottom: 2rem; } .nav-section h4 { padding-bottom: 0.5rem; font-size: 0.8rem; text-transform: uppercase; color: #7f8c8d; border-bottom: 1px solid var(--border-color); }
+        .sidebar-nav ul { list-style: none; padding: 0; } .sidebar-nav li { margin: 0.5rem 0; }
+        .nav-link { display: flex; align-items: center; padding: 0.8rem 1rem; color: var(--primary); text-decoration: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .nav-link:hover { background: var(--light); color: var(--secondary); transform: translateX(5px); }
+        .nav-link.active { background: var(--secondary); color: white; } .nav-link .icon { margin-right: 0.8rem; width: 20px; }
+        .content { background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 2rem; min-height: 400px; }
+        .content-section { display: none; } .content-section.active { display: block; animation: fadeIn 0.3s ease; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .section-header h2 { font-size: 1.8rem; font-weight: 600; }
+        /* Tables & Lists */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-weight: 600; font-size: 0.9rem; color: #555; }
+        .status { padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; color: white; text-transform: capitalize; font-weight: 500; }
+        .status.approved { background-color: var(--success); } .status.pending { background-color: var(--warning); } .status.rejected { background-color: var(--danger); } .status.rescheduled { background-color: var(--faculty); }
+        .action-buttons { display: flex; gap: 0.5rem; }
+        .quick-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .stat-card { background: var(--light); padding: 1.5rem; border-radius: 8px; text-align: center; }
+        .stat-card h3 { font-size: 0.9rem; color: #7f8c8d; } .stat-number { font-size: 2.5rem; font-weight: bold; }
+        .faculty-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .faculty-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; display: flex; flex-direction: column; }
+        .faculty-card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .faculty-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background-color: var(--light); }
+        .faculty-info h3 { font-size: 1.1rem; } .faculty-info .department { color: #7f8c8d; font-size: 0.9rem; }
+        .faculty-card .book-appointment-btn { margin-top: auto; width: 100%; }
+        /* Profile & Avail Styles */
+        .profile-card { max-width: 600px; }
+        .profile-header { text-align: center; margin-bottom: 1.5rem; position: relative; }
+        .profile-photo-container { position: relative; display: inline-block; }
+        .profile-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 4px solid var(--secondary); background-color: var(--light); }
+        #change-photo-btn { position: absolute; bottom: 15px; right: 5px; background-color: white; border-radius: 50%; width: 35px; height: 35px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        #change-photo-btn:hover { background-color: var(--secondary); color: white; transform: scale(1.1); }
+        .profile-details .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #ecf0f1; }
+        .profile-details .detail-item label { font-weight: bold; min-width: 120px; }
+        .office-location-info { display: flex; justify-content: space-between; align-items: center; background-color: var(--light); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.9rem; }
+        .nav-link-btn { background-color: var(--secondary); color: white; padding: 0.3rem 0.8rem; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: background-color 0.2s; }
+        .nav-link-btn:hover { background-color: var(--primary-dark); }
+        .nav-link-btn .fa-map-marker-alt { margin-right: 0.4rem; }
+        .availability-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 1rem; user-select: none; }
+        .availability-table th, .availability-table td { border: 1px solid var(--border-color); padding: 0.5rem; text-align: center; vertical-align: middle; }
+        .availability-table th { background-color: var(--light); font-weight: 600; font-size: 0.9rem; padding: 0.8rem 0.5rem; }
+        .availability-table .time-label { font-weight: 500; font-size: 0.85rem; color: var(--gray); width: 80px; }
+        .availability-table .time-slot { height: 50px; background-color: #fff; cursor: pointer; transition: all 0.2s ease; }
+        .availability-table .time-slot:hover { background-color: #ecf0f1; transform: scale(1.05); }
+        .availability-table .time-slot.available { background-color: var(--success); } .availability-table .time-slot.available:hover { background-color: #27ae60; }
+        /* Swal & Mobile */
+        .swal-label { display: block; text-align: left; font-weight: bold; margin-bottom: 0.5rem; }
+        .swal-input { width: 100% !important; margin-bottom: 1rem; }
+        .swal2-html-container { overflow: visible !important; text-align: left !important; }
+        .time-slots-container { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+        .time-slot-btn { background-color: white; border: 1px solid var(--border-color); color: var(--primary); padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
+        .time-slot-btn:hover { background-color: var(--light); border-color: var(--secondary); }
+        .time-slot-btn.selected { background-color: var(--success); color: white; border-color: var(--success); font-weight: 500; }
+        .no-slots { color: var(--gray); font-style: italic; }
+        #backdrop-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        #backdrop-overlay.active { opacity: 1; visibility: visible; }
+        @media (max-width: 992px) { .dashboard { grid-template-columns: 1fr; } .sidebar { position: fixed; left: 0; top: 0; height: 100%; width: 280px; z-index: 1001; transform: translateX(-100%); border-radius: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } .sidebar.active { transform: translateX(0); } .content { order: 1; } .nav-toggle-btn { display: block; } }
+    </style>
+</head>
+<body>
+    <div id="login-page">
+        <div class="login-container fade-in">
+            <div class="logo" style="justify-content: center; margin-bottom: 2rem;"><img src="https://iust.ac.in/wp-content/uploads/2020/12/IUST-Logo.png" alt="IUST Logo" style="height: 50px;"><h1 style="font-size: 1.8rem;">IUST Portal</h1></div>
+            <div id="auth-container">
+                <div class="login-options"><div class="login-option faculty" data-role="faculty"><i class="fas fa-chalkboard-teacher"></i><h3>Faculty</h3></div><div class="login-option student active" data-role="student"><i class="fas fa-user-graduate"></i><h3>Student</h3></div></div>
+                <div id="login-view">
+                    <form id="login-form"><div class="form-group"><label for="email" class="form-label">Email</label><input type="email" id="email" class="form-control" required value="afaan@s.com"></div><div class="form-group"><label for="password" class="form-label">Password</label><input type="password" id="password" class="form-control" required value="password"></div><button type="submit" class="btn btn-primary">Sign In</button></form>
+                    <p style="text-align: center; margin-top: 1rem;">Don't have an account? <a href="#" id="show-register-link" style="color: var(--secondary); text-decoration: none;">Sign Up</a></p>
+                </div>
+                <div id="register-view" class="hidden">
+                    <form id="register-form" novalidate>
+                        <div class="form-group"><label for="register-name" class="form-label">Full Name</label><input type="text" id="register-name" class="form-control" required></div>
+                        <div class="form-group"><label for="register-email" class="form-label">Email</label><input type="email" id="register-email" class="form-control" required></div>
+                        <div class="form-group"><label for="register-phone" class="form-label">Contact</label><input type="tel" id="register-phone" class="form-control" required></div>
+                        <div id="student-fields"><div class="form-group"><label for="register-year" class="form-label">Year/Semester</label><select id="register-year" class="form-control" required><option value="">Select...</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select></div><div class="form-group"><label for="register-department-student" class="form-label">Department</label><select id="register-department-student" class="form-control" required><option value="">Select...</option></select></div></div>
+                        <div id="faculty-fields" class="hidden"><div class="form-group"><label for="register-department-faculty" class="form-label">Department</label><select id="register-department-faculty" class="form-control"><option value="">Select...</option></select></div><div class="form-group"><label for="register-designation" class="form-label">Designation</label><select id="register-designation" class="form-control"><option value="">Select...</option><option>Professor</option><option>Associate Professor</option><option>Assistant Professor</option></select></div><div class="form-group"><label for="register-office" class="form-label">Office</label><input type="text" id="register-office" class="form-control"></div></div>
+                        <div class="form-group"><label for="register-password" class="form-label">Password</label><input type="password" id="register-password" class="form-control" required></div>
+                        <button type="submit" class="btn btn-primary">Send OTP</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 1rem;">Already have an account? <a href="#" id="show-login-link" style="color: var(--secondary); text-decoration: none;">Sign In</a></p>
+                </div>
+                <div id="otp-view" class="hidden"><p style="text-align: center; margin-bottom: 1rem;">An OTP was sent to <b id="otp-email-display"></b>.</p><form id="otp-form"><div class="form-group"><label for="otp-input" class="form-label">Enter 6-Digit OTP</label><input type="text" id="otp-input" class="form-control" required maxlength="6"></div><button type="submit" class="btn btn-primary">Verify & Register</button></form><p style="text-align: center; margin-top: 1rem;"><a href="#" id="back-to-register-link">Go Back</a> | <a href="#" id="resend-otp-link">Resend OTP</a><span id="resend-timer"></span></p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="dashboard-container" class="hidden">
+        <div id="backdrop-overlay"></div>
+        <header>
+            <div class="header-container">
+                <div class="logo">
+                    <button class="nav-toggle-btn" id="nav-toggle-btn"><i class="fas fa-bars"></i></button>
+                    <img src="https://iust.ac.in/wp-content/uploads/2020/12/IUST-Logo.png" alt="IUST Logo">
+                    <h1>IUST Appointment Portal</h1>
+                </div>
+                <div class="user-info">
+                    <span id="welcome-message"></span>
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <button id="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div class="dashboard">
+                <div class="sidebar" id="sidebar">
+                    <nav class="sidebar-nav">
+                        <div class="nav-section"><h4>Main Menu</h4><ul><li><a href="#" class="nav-link active" data-section="dashboard"><i class="icon fas fa-chart-bar"></i> Dashboard</a></li><li><a href="#" class="nav-link" data-section="faculty"><i class="icon fas fa-chalkboard-teacher"></i> Faculty Directory</a></li><li><a href="#" class="nav-link" data-section="appointments"><i class="icon fas fa-calendar-alt"></i> My Appointments</a></li></ul></div>
+                        <div class="nav-section" id="faculty-tools-section" style="display: none;"><h4>Faculty Tools</h4><ul><li><a href="#" class="nav-link" data-section="schedule"><i class="icon fas fa-clock"></i> My Schedule</a></li></ul></div>
+                        <div class="nav-section"><h4>Account</h4><ul><li><a href="#" class="nav-link" data-section="profile"><i class="icon fas fa-user"></i> Profile</a></li></ul></div>
+                    </nav>
+                </div>
+                <div class="content">
+                    <section id="dashboard-section" class="content-section active"><div class="section-header"><h2>Dashboard</h2></div><div class="quick-stats"><div class="stat-card"><h3>Pending Appointments</h3><span id="pending-count" class="stat-number">0</span></div><div class="stat-card"><h3>Approved Appointments</h3><span id="approved-count" class="stat-number">0</span></div><div class="stat-card"><h3>Total Faculty</h3><span id="faculty-count" class="stat-number">0</span></div></div></section>
+                    <section id="faculty-section" class="content-section"><div class="section-header"><h2>Faculty Directory</h2><div class="filter-controls" style="display: flex; gap: 1rem; align-items: center;"><select id="department-filter" class="form-control" style="width: auto;"></select><input type="text" id="faculty-search" placeholder="Search by name..." class="form-control" style="width: auto;"></div></div><div id="faculty-list" class="faculty-grid"></div></section>
+                    <section id="appointments-section" class="content-section"><div class="section-header"><h2>My Appointments</h2><button id="book-appointment-btn" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Book Appointment</button></div><div id="appointments-list"></div></section>
+                    <section id="schedule-section" class="content-section"><div class="section-header"><h2>Set Your Weekly Availability</h2><button id="save-availability-btn" class="btn btn-success btn-sm"><i class="fas fa-save"></i> Save Changes</button></div><p style="color: var(--gray); margin-bottom: 1.5rem;">Click a time slot to mark it as available for appointments.</p><div id="availability-grid-container"></div></section>
+                    <section id="profile-section" class="content-section"><div class="section-header"><h2>My Profile</h2><button id="edit-profile-btn" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i> Edit Profile</button></div><div id="profile-content"></div></section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    const API_BASE_URL = 'http://localhost:3000/api';
+    const BASE_URL = 'http://localhost:3000';
+    let state = { currentUser: null, faculty: [], appointments: [], availability: {}, selectedRole: 'student' };
+    let tempRegistrationData = {};
+    const getElem = (id) => document.getElementById(id);
+    const departmentsList = [ 'Centre for International Relations', 'Department of Arabic Language and Literature', 'Department of Architecture', 'Department of Chemistry', 'Department of Civil Engineering', 'Department of Computer Science', 'Department of Computer Science and Engineering', 'Department of Economics', 'Department of Education', 'Department of Electrical Engineering', 'Department of Electronics and Communication Engineering', 'Department of English Language and Literature', 'Department of Environment, Sustainability and Climate Change', 'Department of Food Technology', 'Department of Islamic Studies', 'Department of Journalism and Mass Communication', 'Department of Management Studies', 'Department of Mathematical Sciences', 'Department of Mechanical Engineering', 'Department of Philosophy', 'Department of Physics', 'Department of Planning & Geomatics', 'Department of Zoology' ];
+
+    async function apiRequest(endpoint, method = 'GET', body = null, isJson = true) {
+        const token = localStorage.getItem('authToken');
+        const options = { method, headers: {} };
+        if (token) options.headers['Authorization'] = `Bearer ${token}`;
+        if (body) {
+            if (isJson) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(body); } else { options.body = body; }
+        }
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+        if (response.status === 204) return null;
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        return data;
+    }
+
+    function bindAuthEventListeners() { getElem('login-page').addEventListener('click', (e) => { if (e.target.id === 'show-register-link') toggleAuthView(e, 'register'); if (e.target.id === 'show-login-link') toggleAuthView(e, 'login'); if (e.target.id === 'back-to-register-link') backToRegister(e); if (e.target.id === 'resend-otp-link') handleResendOtp(e); const roleOption = e.target.closest('.login-option'); if (roleOption) handleRoleSelect(roleOption); }); getElem('login-form').addEventListener('submit', handleLogin); getElem('register-form').addEventListener('submit', handleSendOtp); getElem('otp-form').addEventListener('submit', handleVerifyAndRegister); }
+    function handleRoleSelect(element) { document.querySelectorAll('.login-option').forEach(opt => opt.classList.remove('active')); element.classList.add('active'); state.selectedRole = element.dataset.role; const isStudent = state.selectedRole === 'student'; getElem('student-fields').classList.toggle('hidden', !isStudent); getElem('faculty-fields').classList.toggle('hidden', isStudent); getElem('student-fields').querySelectorAll('select').forEach(el => el.disabled = !isStudent); getElem('faculty-fields').querySelectorAll('input, select').forEach(el => el.disabled = isStudent); }
+    function toggleAuthView(e, view) { e.preventDefault(); getElem('login-view').classList.add('hidden'); getElem('register-view').classList.add('hidden'); getElem('otp-view').classList.add('hidden'); if (view === 'login') getElem('login-view').classList.remove('hidden'); if (view === 'register') getElem('register-view').classList.remove('hidden');}
+    async function handleSendOtp(e) { e.preventDefault(); const form = e.target; if (!form.checkValidity()) return form.reportValidity(); const email = getElem('register-email').value; const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Sending...'; try { const data = await apiRequest('/auth/send-otp', 'POST', { email }); tempRegistrationData = { name: getElem('register-name').value, email, password: getElem('register-password').value, phone: getElem('register-phone').value, role: state.selectedRole }; if (state.selectedRole === 'student') { tempRegistrationData.department = getElem('register-department-student').value; tempRegistrationData.yearSemester = getElem('register-year').value; } else { tempRegistrationData.department = getElem('register-department-faculty').value; tempRegistrationData.designation = getElem('register-designation').value; tempRegistrationData.office = getElem('register-office').value; } getElem('register-view').classList.add('hidden'); getElem('otp-email-display').textContent = email; getElem('otp-view').classList.remove('hidden'); Swal.fire('OTP Sent', data.message, 'success'); startResendTimer(); } catch (error) { Swal.fire('Error', error.message, 'error'); } finally { button.disabled = false; button.textContent = 'Send OTP'; } }
+    async function handleVerifyAndRegister(e) { e.preventDefault(); const otp = getElem('otp-input').value; if (!/^\d{6}$/.test(otp)) return Swal.fire('Invalid OTP', 'OTP must be 6 digits.', 'error'); const button = e.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Verifying...'; try { await apiRequest('/auth/register', 'POST', { ...tempRegistrationData, otp }); Swal.fire('Success!', 'Registration complete! Please log in.', 'success'); toggleAuthView(e, 'login'); e.target.reset(); getElem('login-form').reset(); tempRegistrationData = {}; } catch (error) { Swal.fire('Error', error.message, 'error'); } finally { button.disabled = false; button.textContent = 'Verify & Register'; } }
+    function backToRegister(e) { e.preventDefault(); toggleAuthView(e, 'register'); }
+    function startResendTimer() { const link = getElem('resend-otp-link'), timer = getElem('resend-timer'); let count = 30; link.style.pointerEvents = 'none'; link.style.color = 'var(--gray)'; const interval = setInterval(() => { count--; timer.textContent = ` (${count}s)`; if (count <= 0) { clearInterval(interval); timer.textContent = ''; link.style.pointerEvents = 'auto'; link.style.color = 'var(--secondary)'; } }, 1000); }
+    async function handleResendOtp(e) { e.preventDefault(); if (!tempRegistrationData.email) return; try { await apiRequest('/auth/send-otp', 'POST', { email: tempRegistrationData.email }); Swal.fire('Success', 'A new OTP has been sent.', 'success'); startResendTimer(); } catch (error) { Swal.fire('Error', error.message, 'error'); } }
+    async function handleLogin(e) { e.preventDefault(); try { const data = await apiRequest('/auth/login', 'POST', { email: getElem('email').value, password: getElem('password').value, role: state.selectedRole }); localStorage.setItem('authToken', data.token); localStorage.setItem('currentUser', JSON.stringify(data.user)); state.currentUser = data.user; await initApp(); } catch (error) { Swal.fire('Login Failed', error.message, 'error'); } }
+    function handleLogout() { localStorage.clear(); window.location.reload(); }
+
+    async function initApp() { getElem('login-page').classList.add('hidden'); getElem('dashboard-container').classList.remove('hidden'); setupUserInterface(state.currentUser); setupDashboardEventListeners(); await switchSection('dashboard'); }
+    function setupUserInterface(user) { state.currentUser = user; getElem('welcome-message').textContent = `Welcome, ${user.name}!`; const avatarElem = getElem('user-avatar'); if (user.avatar_url) { avatarElem.style.backgroundImage = `url(${BASE_URL}${user.avatar_url})`; avatarElem.textContent = ''; } else { avatarElem.style.backgroundImage = 'none'; avatarElem.textContent = user.name.charAt(0).toUpperCase(); } getElem('faculty-tools-section').style.display = user.role === 'faculty' ? 'block' : 'none'; getElem('book-appointment-btn').style.display = 'inline-flex'; }
+    function toggleSidebar() { getElem('sidebar').classList.toggle('active'); getElem('backdrop-overlay').classList.toggle('active'); }
+    
+    function setupDashboardEventListeners() { 
+        getElem('logout-button').addEventListener('click', handleLogout); 
+        document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchSection(link.dataset.section); if (getElem('sidebar').classList.contains('active')) toggleSidebar(); })); 
+        getElem('book-appointment-btn')?.addEventListener('click', () => showNewAppointmentModal()); 
+        getElem('appointments-list').addEventListener('click', (e) => { const statusBtn = e.target.closest('.status-btn'); if (statusBtn) handleAppointmentStatusUpdate(statusBtn.dataset.id, statusBtn.dataset.status); const rescheduleBtn = e.target.closest('.reschedule-btn'); if (rescheduleBtn) handleAppointmentReschedule(rescheduleBtn.dataset.id, rescheduleBtn.dataset.date, rescheduleBtn.dataset.time);}); 
+        getElem('faculty-list').addEventListener('click', (e) => { const bookBtn = e.target.closest('.book-appointment-btn'); if (bookBtn) showNewAppointmentModal(bookBtn.dataset.facultyId); const profileBtn = e.target.closest('.view-profile-btn'); if(profileBtn) showFacultyProfileModal(profileBtn.dataset.facultyId); }); 
+        getElem('edit-profile-btn')?.addEventListener('click', showEditProfileModal); 
+        getElem('save-availability-btn')?.addEventListener('click', handleSaveAvailability); 
+        getElem('department-filter')?.addEventListener('change', renderFaculty); 
+        getElem('faculty-search')?.addEventListener('input', renderFaculty);
+        
+        getElem('profile-content').addEventListener('click', e => { 
+            if (e.target.closest('#change-photo-btn')) showUploadAvatarModal(); 
+            // --- UPDATED: Listener for Sync Location Button ---
+            if (e.target.closest('#sync-location-btn')) handleSyncLocation();
+        });
+
+        getElem('nav-toggle-btn').addEventListener('click', toggleSidebar);
+        getElem('backdrop-overlay').addEventListener('click', toggleSidebar);
+    }
+
+    async function switchSection(section) { document.querySelectorAll('.nav-link').forEach(link => { link.classList.toggle('active', link.dataset.section === section); }); document.querySelectorAll('.content-section').forEach(sec => { sec.classList.toggle('active', sec.id === `${section}-section`); }); await loadSectionData(section); }
+    async function loadSectionData(section) { try { if (!getElem(`${section}-section`)) return; switch (section) { case 'dashboard': await loadDashboardData(); break; case 'appointments': getElem('appointments-list').innerHTML = '<p>Loading...</p>'; await loadAppointmentsData(); break; case 'faculty': getElem('faculty-list').innerHTML = '<p>Loading...</p>'; await loadFacultyData(); break; case 'profile': getElem('profile-content').innerHTML = '<p>Loading...</p>'; await loadProfileData(); break; case 'schedule': getElem('availability-grid-container').innerHTML = '<p>Loading...</p>'; await loadAvailabilityData(); break; } } catch (error) { Swal.fire('Error', error.message, 'error'); } }
+
+    async function loadDashboardData() { const [appointments, faculty] = await Promise.all([apiRequest('/appointments'), apiRequest('/faculty')]); state.appointments = appointments; state.faculty = faculty; getElem('pending-count').textContent = appointments.filter(a => a.status === 'pending').length; getElem('approved-count').textContent = appointments.filter(a => a.status === 'approved').length; getElem('faculty-count').textContent = faculty.length; }
+    async function loadAppointmentsData() { state.appointments = await apiRequest('/appointments'); renderAppointments(); }
+    
+    function renderAppointments() {
+        const container = getElem('appointments-list');
+        if (!container || state.appointments.length === 0) { container.innerHTML = '<p>No appointments found.</p>'; return; }
+        const isUserFaculty = state.currentUser.role === 'faculty';
+        let headers = `<th>Participant</th><th>Purpose</th><th>Date & Time</th><th>Status</th>${isUserFaculty ? `<th>Actions</th>` : ''}`;
+        const rows = state.appointments.map(app => {
+            const isRequester = app.studentId === state.currentUser.id;
+            const participantName = isRequester ? app.facultyName : app.studentName;
+            let actions = '';
+            if (isUserFaculty && !isRequester) {
+                if (app.status === 'pending') actions = `<div class="action-buttons"><button class="btn-sm btn-success status-btn" data-id="${app.id}" data-status="approved">Approve</button><button class="btn-sm btn-danger status-btn" data-id="${app.id}" data-status="rejected">Reject</button><button class="btn-sm btn-warning reschedule-btn" data-id="${app.id}">Reschedule</button></div>`;
+                else if (app.status === 'approved' || app.status === 'rescheduled') actions = `<div class="action-buttons"><button class="btn-sm btn-warning reschedule-btn" data-id="${app.id}">Reschedule</button></div>`;
+            }
+            return `<tr><td>${participantName}</td><td>${app.purpose}</td><td>${app.date} at ${app.time}</td><td><span class="status ${app.status.toLowerCase()}">${app.status}</span></td>${isUserFaculty ? `<td>${actions}</td>` : ''}</tr>`;
+        }).join('');
+        container.innerHTML = `<table style="overflow-x: auto; display: block;"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    async function handleAppointmentStatusUpdate(id, status) { const result = await Swal.fire({ title: 'Confirm Action', text: `Are you sure you want to ${status}?`, icon: 'warning', showCancelButton: true }); if (result.isConfirmed) { try { await apiRequest(`/appointments/${id}/status`, 'POST', { status }); Swal.fire('Success!', `Appointment ${status}.`, 'success'); await Promise.all([loadAppointmentsData(), loadDashboardData()]); } catch (error) { Swal.fire('Error', error.message, 'error'); } } }
+    async function handleAppointmentReschedule(id, cd, ct) { const { value: v } = await Swal.fire({ title: 'Reschedule', html: `<label class="swal-label">New Date</label><input id="swal-date" type="date" min="${new Date().toISOString().split('T')[0]}" class="swal2-input"><label class="swal-label">New Time</label><input id="swal-time" type="time" class="swal2-input">`, preConfirm: () => { return { date: getElem('swal-date').value, time: getElem('swal-time').value }; } }); if (v && v.date && v.time) { try { await apiRequest(`/appointments/${id}/reschedule`, 'POST', v); Swal.fire('Success', 'Rescheduled.', 'success'); loadAppointmentsData(); } catch (e) { Swal.fire('Error', e.message, 'error'); } } }
+
+    async function loadFacultyData() { state.faculty = await apiRequest('/faculty'); populateDepartmentFilter(); renderFaculty(); }
+    function populateDepartmentFilter() { const filter = getElem('department-filter'); if (!filter) return; filter.innerHTML = '<option value="">All Departments</option>' + departmentsList.map(d => `<option value="${d}">${d}</option>`).join(''); }
+    function renderFaculty() { 
+        const container = getElem('faculty-list'); const dept = getElem('department-filter').value; const query = getElem('faculty-search').value.toLowerCase(); 
+        const filtered = state.faculty.filter(f => (!dept || f.department === dept) && (!query || f.name.toLowerCase().includes(query)));
+        if (filtered.length === 0) { container.innerHTML = '<p>No faculty found.</p>'; return; }
+        container.innerHTML = filtered.map(f => {
+            const mapUrl = f.office && f.office.startsWith('http') ? f.office : `https://www.google.com/maps?q=${encodeURIComponent('IUST, Awantipora, ' + f.office)}`;
+            const officeDisplay = f.office && f.office.startsWith('http') ? 'View Map Location' : (f.office || 'N/A');
+            const officeHtml = f.office ? `<div class="office-location-info"><span><i class="fas fa-map-pin"></i> ${officeDisplay}</span><a href="${mapUrl}" target="_blank" class="nav-link-btn"><i class="fas fa-map-marker-alt"></i> Nav</a></div>` : '<p><strong>Office:</strong> N/A</p>';
+            return `<div class="faculty-card"><div class="faculty-card-header"><img src="${f.avatar_url ? BASE_URL + f.avatar_url : `https://i.pravatar.cc/150?u=${f.email}`}" class="faculty-photo"><div class="faculty-info"><h3>${f.name}</h3><p class="department">${f.designation||'Faculty'}</p></div></div><p><strong>Department:</strong> ${f.department}</p>${officeHtml}<div class="action-buttons" style="margin-top: auto; padding-top: 1rem;"><button class="btn btn-sm btn-secondary view-profile-btn" data-faculty-id="${f.id}" style="flex-grow: 1;">View Profile</button><button class="btn btn-sm btn-primary book-appointment-btn" data-faculty-id="${f.id}" style="flex-grow: 1;">Book</button></div></div>`;
+        }).join(''); 
+    }
+
+    async function showNewAppointmentModal(fid = null) {
+        if (state.faculty.length === 0) await loadFacultyData();
+        const fOptions = state.faculty.map(f => `<option value="${f.id}" ${f.id == fid ? 'selected' : ''}>${f.name}</option>`).join('');
+        Swal.fire({ title: 'Book Appointment', html: `<select id="swal-fid" class="swal2-input">${fOptions}</select><input id="swal-date" type="date" class="swal2-input" min="${new Date().toISOString().split('T')[0]}"><div id="swal-slots" class="time-slots-container"></div><textarea id="swal-purpose" class="swal2-textarea" placeholder="Purpose"></textarea>`, didOpen: () => {
+            const dInput = getElem('swal-date'); const sCont = getElem('swal-slots');
+            dInput.addEventListener('change', async () => {
+                const date = dInput.value; const fid = getElem('swal-fid').value;
+                if (!date || new Date(date).getDay() % 6 === 0) { sCont.innerHTML = '<p class="no-slots">Select a weekday.</p>'; return; }
+                const profile = await apiRequest(`/faculty/${fid}`);
+                const day = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                const slots = profile.availability?.[day] || [];
+                sCont.innerHTML = slots.length ? slots.map(t => `<button class="time-slot-btn" onclick="this.parentNode.querySelectorAll('.selected').forEach(e=>e.classList.remove('selected'));this.classList.add('selected');">${t}</button>`).join('') : 'No slots.';
+            });
+        }, preConfirm: () => { return { facultyId: getElem('swal-fid').value, date: getElem('swal-date').value, time: getElem('swal-slots').querySelector('.selected')?.textContent, purpose: getElem('swal-purpose').value }; }
+        }).then(async r => { if(r.value && r.value.time) { await apiRequest('/appointments', 'POST', r.value); Swal.fire('Booked!', '', 'success'); loadDashboardData(); } });
+    }
+
+    async function showFacultyProfileModal(id) {
+        const p = await apiRequest(`/faculty/${id}`);
+        const mapUrl = p.office && p.office.startsWith('http') ? p.office : `https://www.google.com/maps?q=${encodeURIComponent('IUST ' + p.office)}`;
+        const officeText = p.office && p.office.startsWith('http') ? 'View Map Location' : (p.office || 'N/A');
+        Swal.fire({ title: p.name, html: `<img src="${p.avatar_url ? BASE_URL + p.avatar_url : `https://i.pravatar.cc/150?u=${p.email}`}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;"><p>${p.designation}</p><p>${p.department}</p><p><a href="${mapUrl}" target="_blank">${officeText}</a></p>` });
+    }
+
+    async function loadProfileData() { const p = await apiRequest('/users/profile'); renderProfile(p); }
+    
+    // --- UPDATED RENDER PROFILE FUNCTION WITH SYNC BUTTON ---
+    function renderProfile(p) {
+        state.currentUser = p;
+        const c = getElem('profile-content');
+        if (!c) return;
+
+        const isStudent = p.role === 'student';
+        const avatarSrc = p.avatar_url ? (BASE_URL + p.avatar_url) : `https://i.pravatar.cc/150?u=${p.email}`;
+        
+        let calendarHtml = '';
+        if (p.role === 'faculty') {
+            calendarHtml = p.google_refresh_token ? `<div style="margin-top:1rem;color:green;"><i class="fas fa-check"></i> Calendar Linked</div>` : `<div style="margin-top:1rem;"><a href="/api/auth/google?token=${localStorage.getItem('authToken')}" class="btn btn-primary btn-sm">Link Calendar</a></div>`;
+        }
+        
+        // --- Updated Office Logic ---
+        let officeHtml = '';
+        if (p.role === 'faculty') {
+            const officeVal = p.office || 'Not set';
+            const isLink = officeVal.startsWith('http');
+            const displayVal = isLink ? `<a href="${officeVal}" target="_blank">View on Map</a>` : officeVal;
+
+            officeHtml = `
+            <div class="detail-item" style="align-items: flex-start;">
+                <label style="padding-top: 5px;">Office:</label>
+                <div style="flex-grow: 1; text-align: right;">
+                    <span style="display: block; margin-bottom: 5px;">${displayVal}</span>
+                    <button id="sync-location-btn" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                        <i class="fas fa-sync-alt"></i> Update / Sync Location
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        c.innerHTML = `<div class="profile-card">
+            <div class="profile-header"><div class="profile-photo-container"><img src="${avatarSrc}" class="profile-photo"><button id="change-photo-btn"><i class="fas fa-camera"></i></button></div><h3>${p.name}</h3><p>${p.role}</p></div>
+            <div class="profile-details">
+                <div class="detail-item"><label>Email:</label><span>${p.email}</span></div>
+                <div class="detail-item"><label>Phone:</label><span>${p.phone||'N/A'}</span></div>
+                <div class="detail-item"><label>Department:</label><span>${p.department||'N/A'}</span></div>
+                ${isStudent ? `<div class="detail-item"><label>Year:</label><span>${p.year_semester||'N/A'}</span></div>` : `<div class="detail-item"><label>Designation:</label><span>${p.designation||'N/A'}</span></div>${officeHtml}`}
+            </div>
+            ${calendarHtml}
+        </div>`;
+    }
+
+    // --- NEW SYNC LOCATION FUNCTION ---
+    async function handleSyncLocation() {
+        const currentOffice = state.currentUser.office || '';
+        const { value: result } = await Swal.fire({
+            title: 'Sync Office Location',
+            html: `
+                <p style="margin-bottom: 1rem; color: #666;">Enter office number or sync GPS coordinates.</p>
+                <input id="swal-location-input" class="swal2-input" placeholder="Location..." value="${currentOffice}">
+                <button type="button" id="get-gps-btn" class="btn btn-warning" style="margin-top: 10px; width: 100%;">
+                    <i class="fas fa-map-marker-alt"></i> Use My GPS Location
+                </button>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Save',
+            didOpen: () => {
+                const input = getElem('swal-location-input');
+                const gpsBtn = getElem('get-gps-btn');
+                gpsBtn.addEventListener('click', () => {
+                    if (!navigator.geolocation) return Swal.showValidationMessage('Geolocation not supported.');
+                    gpsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+                    gpsBtn.disabled = true;
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            input.value = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                            gpsBtn.innerHTML = '<i class="fas fa-check"></i> Found!';
+                            gpsBtn.className = 'btn btn-success';
+                            gpsBtn.style.marginTop = '10px'; gpsBtn.style.width = '100%';
+                        },
+                        () => { gpsBtn.innerHTML = 'GPS Failed'; gpsBtn.disabled = false; },
+                        { enableHighAccuracy: true }
+                    );
+                });
+            },
+            preConfirm: () => getElem('swal-location-input').value
+        });
+
+        if (result !== undefined) {
+            try {
+                Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
+                // Note: We send other profile fields to avoid overwriting them with null if the backend expects full objects
+                const { user } = await apiRequest('/users/profile', 'PUT', { 
+                    office: result, name: state.currentUser.name, phone: state.currentUser.phone,
+                    department: state.currentUser.department, designation: state.currentUser.designation
+                });
+                renderProfile(user);
+                Swal.fire('Synced!', 'Location updated.', 'success');
+            } catch (error) { Swal.fire('Error', error.message, 'error'); }
+        }
+    }
+
+    // --- ORIGINAL EDIT PROFILE MODAL (PRESERVED) ---
+    async function showEditProfileModal() { 
+        const p = state.currentUser; 
+        const isStudent = p.role === 'student'; 
+        const deptOptions = departmentsList.map(d => `<option value="${d}" ${p.department === d ? 'selected' : ''}>${d}</option>`).join(''); 
+        const studentFields = `<div class="form-group"><label class="swal-label" for="swal-year">Year/Semester</label><select id="swal-year" class="swal2-input">${['1st Year','2nd Year','3rd Year','4th Year'].map(y => `<option value="${y}" ${p.year_semester === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>`; 
+        const facultyFields = `<div class="form-group"><label class="swal-label" for="swal-designation">Designation</label><select id="swal-designation" class="swal2-input">${['Professor','Associate Professor','Assistant Professor'].map(d => `<option value="${d}" ${p.designation === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div><div class="form-group"><label class="swal-label" for="swal-office">Office (Manual Entry)</label><input id="swal-office" class="swal2-input" value="${p.office || ''}"></div>`; 
+        const { value: formValues } = await Swal.fire({ title: 'Edit My Profile', html: `<div class="form-group"><label class="swal-label" for="swal-name">Full Name</label><input id="swal-name" class="swal2-input" value="${p.name}"></div><div class="form-group"><label class="swal-label" for="swal-phone">Phone</label><input id="swal-phone" class="swal2-input" value="${p.phone || ''}"></div><div class="form-group"><label class="swal-label" for="swal-department">Department</label><select id="swal-department" class="swal2-input">${deptOptions}</select></div>${isStudent ? studentFields : facultyFields}`, showCancelButton: true, confirmButtonText: 'Save Changes', focusConfirm: false, preConfirm: () => { const values = { name: getElem('swal-name').value, phone: getElem('swal-phone').value, department: getElem('swal-department').value, }; if(isStudent) values.yearSemester = getElem('swal-year').value; else { values.designation = getElem('swal-designation').value; values.office = getElem('swal-office').value; } return values; } }); 
+        if (formValues) { try { const { user } = await apiRequest('/users/profile', 'PUT', formValues); localStorage.setItem('currentUser', JSON.stringify(user)); setupUserInterface(user); renderProfile(user); Swal.fire('Success!', 'Your profile has been updated.', 'success'); } catch (error) { Swal.fire('Error!', error.message, 'error'); } } 
+    }
+
+    async function showUploadAvatarModal() { const { value: file } = await Swal.fire({ title: 'Upload Photo', input: 'file' }); if (file) { const fd = new FormData(); fd.append('avatar', file); await apiRequest('/users/profile/avatar', 'POST', fd, false); loadProfileData(); } }
+    
+    async function loadAvailabilityData() { const p = await apiRequest('/users/profile'); state.availability = p.availability || {}; renderAvailabilityGrid(); }
+    function renderAvailabilityGrid() { const c = getElem('availability-grid-container'); if(!c) return; let h = '<table class="availability-table"><thead><tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr></thead><tbody>'; const times = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']; const days = ['monday','tuesday','wednesday','thursday','friday']; times.forEach(t => { h += `<tr><td>${t}</td>`; days.forEach(d => { const active = state.availability[d]?.includes(t) ? 'available' : ''; h += `<td class="time-slot ${active}" data-d="${d}" data-t="${t}"></td>`; }); h += '</tr>'; }); c.innerHTML = h + '</tbody></table>'; c.querySelector('tbody').addEventListener('click', e => { const td = e.target.closest('td'); if(!td.dataset.d) return; const {d,t} = td.dataset; if(state.availability[d]?.includes(t)) state.availability[d]=state.availability[d].filter(x=>x!==t); else (state.availability[d]||(state.availability[d]=[])).push(t); td.classList.toggle('available'); }); }
+    async function handleSaveAvailability() { await apiRequest('/faculty/profile/availability', 'PUT', { availability: state.availability }); Swal.fire('Saved!', '', 'success'); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getElem('register-department-student').innerHTML += departmentsList.map(d => `<option>${d}</option>`).join('');
+        getElem('register-department-faculty').innerHTML += departmentsList.map(d => `<option>${d}</option>`).join('');
+        bindAuthEventListeners(); 
+        const token = localStorage.getItem('authToken'); const user = localStorage.getItem('currentUser'); 
+        if (token && user) { try { state.currentUser = JSON.parse(user); initApp(); } catch (e) { localStorage.clear(); } } 
+    });
+</script>
+</body>
+</html>
