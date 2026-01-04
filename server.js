@@ -159,7 +159,7 @@ async function setupDatabase() {
             `INSERT INTO users (name, email, password, role, department, designation, office, phone)
              VALUES ($1, $2, $3, 'faculty', 'Computer Science Engineering', 'Professor', 'Block IV - S01', '1234567890')
              RETURNING id`,
-            ['Dr. Muzafar Rasool', 'm.rasool@i.com', facultyPasswordHash]
+            ['Dr. Muzafar Rasool', 'm.rasool@iust.ac.in', facultyPasswordHash]
         );
         console.log('Faculty user inserted.');
 
@@ -218,6 +218,13 @@ const authMiddleware = (req, res, next) => {
 // --- AUTHENTICATION & REGISTRATION APIS ---
 app.post('/api/auth/login', async (req, res) => {
     const { email, password, role } = req.body;
+
+    // --- SECURITY CHECK: Restrict Faculty Login Domain ---
+    if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
+        return res.status(403).json({ message: 'Access Denied: Faculty must log in with an official @iust.ac.in email address.' });
+    }
+    // ----------------------------------------------------
+
     try {
         const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         const user = result.rows[0];
@@ -239,7 +246,14 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.post('/api/auth/send-otp', async (req, res) => {
-    const { email } = req.body;
+    const { email, role } = req.body; // <--- Get role from request
+
+    // --- SECURITY CHECK: Block OTP for non-IUST Faculty emails ---
+    if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
+        return res.status(403).json({ message: 'Restricted: Faculty must use an official @iust.ac.in email address.' });
+    }
+    // -------------------------------------------------------------
+
     try {
         const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
@@ -255,8 +269,16 @@ app.post('/api/auth/send-otp', async (req, res) => {
         res.status(500).json({ message: 'Error sending OTP. Please try again later.' });
     }
 });
+
 app.post('/api/auth/register', async (req, res) => {
     const { name, email, password, phone, role, department, yearSemester: year_semester, designation, office, otp } = req.body;
+
+    // --- SECURITY CHECK: Restrict Faculty Registration Domain ---
+    if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
+        return res.status(403).json({ message: 'Restricted: Faculty must register with an official @iust.ac.in email address.' });
+    }
+    // ------------------------------------------------------------
+
     try {
         const storedOtpData = otpStore[email];
         if (!storedOtpData || Date.now() > storedOtpData.expires || storedOtpData.otp !== otp) {

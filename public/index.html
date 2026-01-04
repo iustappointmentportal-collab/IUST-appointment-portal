@@ -62,7 +62,7 @@
 
         /* Tables */
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 6px; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; /* Force min-width so table doesn't squash on mobile */ }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { font-weight: 600; font-size: 0.9rem; color: #555; background-color: #f8f9fa; white-space: nowrap; }
         
@@ -123,8 +123,6 @@
         #backdrop-overlay.active { opacity: 1; visibility: visible; }
         
         /* --- MEDIA QUERIES (RESPONSIVE DESIGN) --- */
-        
-        /* Tablets & Smaller Laptops */
         @media (max-width: 992px) { 
             .dashboard { grid-template-columns: 1fr; } 
             .sidebar { position: fixed; left: 0; top: 0; height: 100%; width: 280px; z-index: 1001; transform: translateX(-100%); border-radius: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } 
@@ -133,7 +131,6 @@
             .nav-toggle-btn { display: block; } 
         }
 
-        /* Mobile Phones (Landscape & Portrait) */
         @media (max-width: 768px) {
             .header-container { padding: 0 0.5rem; }
             .logo h1 { font-size: 1.1rem; } 
@@ -141,7 +138,7 @@
             #logout-button { padding: 0.5rem; }
             .user-info { gap: 0.5rem; }
             .user-avatar { width: 35px; height: 35px; font-size: 0.9rem; }
-            .faculty-grid { grid-template-columns: 1fr; } /* Single column cards */
+            .faculty-grid { grid-template-columns: 1fr; } 
             .quick-stats { grid-template-columns: 1fr; } 
             .section-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
             .section-header button, .section-header .filter-controls { width: 100%; }
@@ -150,7 +147,6 @@
             .content { padding: 1.5rem 1rem; }
         }
 
-        /* Small Phones */
         @media (max-width: 480px) {
             .login-container { padding: 1.5rem 1rem; }
             .login-options { flex-direction: column; gap: 0.5rem; }
@@ -161,21 +157,11 @@
             .stat-number { font-size: 2rem; }
         }
 
-        /* --- UNIVERSAL "ADJUST EVERYTHING" RESET --- */
-        /* This section forces all stubborn elements to behave on mobile */
-        
+        /* --- UNIVERSAL RESET (Prevents broken layouts) --- */
         html, body { max-width: 100%; overflow-x: hidden; }
-        
-        /* Force media to fit */
         img, svg, video, iframe { max-width: 100% !important; height: auto !important; }
-        
-        /* Force text to wrap */
         p, span, label, li { word-wrap: break-word; overflow-wrap: break-word; }
-        
-        /* Fix input zoom on mobile and width */
         input, select, textarea { font-size: 16px !important; max-width: 100%; }
-        
-        /* FORCE Popup (SweetAlert) to fit screen */
         div.swal2-popup { width: 90% !important; max-width: 100% !important; font-size: 0.9rem !important; padding: 1rem !important; }
         .swal2-input, .swal2-textarea, .swal2-select { width: 100% !important; margin: 1rem auto !important; }
         
@@ -270,12 +256,54 @@
     function bindAuthEventListeners() { getElem('login-page').addEventListener('click', (e) => { if (e.target.id === 'show-register-link') toggleAuthView(e, 'register'); if (e.target.id === 'show-login-link') toggleAuthView(e, 'login'); if (e.target.id === 'back-to-register-link') backToRegister(e); if (e.target.id === 'resend-otp-link') handleResendOtp(e); const roleOption = e.target.closest('.login-option'); if (roleOption) handleRoleSelect(roleOption); }); getElem('login-form').addEventListener('submit', handleLogin); getElem('register-form').addEventListener('submit', handleSendOtp); getElem('otp-form').addEventListener('submit', handleVerifyAndRegister); }
     function handleRoleSelect(element) { document.querySelectorAll('.login-option').forEach(opt => opt.classList.remove('active')); element.classList.add('active'); state.selectedRole = element.dataset.role; const isStudent = state.selectedRole === 'student'; getElem('student-fields').classList.toggle('hidden', !isStudent); getElem('faculty-fields').classList.toggle('hidden', isStudent); getElem('student-fields').querySelectorAll('select').forEach(el => el.disabled = !isStudent); getElem('faculty-fields').querySelectorAll('input, select').forEach(el => el.disabled = isStudent); }
     function toggleAuthView(e, view) { e.preventDefault(); getElem('login-view').classList.add('hidden'); getElem('register-view').classList.add('hidden'); getElem('otp-view').classList.add('hidden'); if (view === 'login') getElem('login-view').classList.remove('hidden'); if (view === 'register') getElem('register-view').classList.remove('hidden');}
-    async function handleSendOtp(e) { e.preventDefault(); const form = e.target; if (!form.checkValidity()) return form.reportValidity(); const email = getElem('register-email').value; const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Sending...'; try { const data = await apiRequest('/auth/send-otp', 'POST', { email }); tempRegistrationData = { name: getElem('register-name').value, email, password: getElem('register-password').value, phone: getElem('register-phone').value, role: state.selectedRole }; if (state.selectedRole === 'student') { tempRegistrationData.department = getElem('register-department-student').value; tempRegistrationData.yearSemester = getElem('register-year').value; } else { tempRegistrationData.department = getElem('register-department-faculty').value; tempRegistrationData.designation = getElem('register-designation').value; tempRegistrationData.office = getElem('register-office').value; } getElem('register-view').classList.add('hidden'); getElem('otp-email-display').textContent = email; getElem('otp-view').classList.remove('hidden'); Swal.fire('OTP Sent', data.message, 'success'); startResendTimer(); } catch (error) { Swal.fire('Error', error.message, 'error'); } finally { button.disabled = false; button.textContent = 'Send OTP'; } }
+    
+    // --- UPDATED: HANDLE SEND OTP (WITH EMAIL CHECK & ROLE SENDING) ---
+    async function handleSendOtp(e) { 
+        e.preventDefault(); 
+        const form = e.target; 
+        if (!form.checkValidity()) return form.reportValidity(); 
+        const email = getElem('register-email').value.trim(); 
+        
+        // CHECK: If role is faculty, ensure email ends with @iust.ac.in
+        if (state.selectedRole === 'faculty' && !email.endsWith('@iust.ac.in')) {
+            return Swal.fire('Restriction', 'Faculty members must use an official <b>@iust.ac.in</b> email address.', 'error');
+        }
+
+        const button = form.querySelector('button[type="submit"]'); 
+        button.disabled = true; button.textContent = 'Sending...'; 
+        try { 
+            // !! IMPORTANT: Send the role to the backend so it can verify !!
+            const data = await apiRequest('/auth/send-otp', 'POST', { email, role: state.selectedRole }); 
+            
+            tempRegistrationData = { name: getElem('register-name').value, email, password: getElem('register-password').value, phone: getElem('register-phone').value, role: state.selectedRole }; 
+            if (state.selectedRole === 'student') { tempRegistrationData.department = getElem('register-department-student').value; tempRegistrationData.yearSemester = getElem('register-year').value; } 
+            else { tempRegistrationData.department = getElem('register-department-faculty').value; tempRegistrationData.designation = getElem('register-designation').value; tempRegistrationData.office = getElem('register-office').value; } 
+            getElem('register-view').classList.add('hidden'); getElem('otp-email-display').textContent = email; getElem('otp-view').classList.remove('hidden'); Swal.fire('OTP Sent', data.message, 'success'); startResendTimer(); 
+        } catch (error) { Swal.fire('Error', error.message, 'error'); } 
+        finally { button.disabled = false; button.textContent = 'Send OTP'; } 
+    }
+
     async function handleVerifyAndRegister(e) { e.preventDefault(); const otp = getElem('otp-input').value; if (!/^\d{6}$/.test(otp)) return Swal.fire('Invalid OTP', 'OTP must be 6 digits.', 'error'); const button = e.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Verifying...'; try { await apiRequest('/auth/register', 'POST', { ...tempRegistrationData, otp }); Swal.fire('Success!', 'Registration complete! Please log in.', 'success'); toggleAuthView(e, 'login'); e.target.reset(); getElem('login-form').reset(); tempRegistrationData = {}; } catch (error) { Swal.fire('Error', error.message, 'error'); } finally { button.disabled = false; button.textContent = 'Verify & Register'; } }
     function backToRegister(e) { e.preventDefault(); toggleAuthView(e, 'register'); }
     function startResendTimer() { const link = getElem('resend-otp-link'), timer = getElem('resend-timer'); let count = 30; link.style.pointerEvents = 'none'; link.style.color = 'var(--gray)'; const interval = setInterval(() => { count--; timer.textContent = ` (${count}s)`; if (count <= 0) { clearInterval(interval); timer.textContent = ''; link.style.pointerEvents = 'auto'; link.style.color = 'var(--secondary)'; } }, 1000); }
-    async function handleResendOtp(e) { e.preventDefault(); if (!tempRegistrationData.email) return; try { await apiRequest('/auth/send-otp', 'POST', { email: tempRegistrationData.email }); Swal.fire('Success', 'A new OTP has been sent.', 'success'); startResendTimer(); } catch (error) { Swal.fire('Error', error.message, 'error'); } }
-    async function handleLogin(e) { e.preventDefault(); try { const data = await apiRequest('/auth/login', 'POST', { email: getElem('email').value, password: getElem('password').value, role: state.selectedRole }); localStorage.setItem('authToken', data.token); localStorage.setItem('currentUser', JSON.stringify(data.user)); state.currentUser = data.user; await initApp(); } catch (error) { Swal.fire('Login Failed', error.message, 'error'); } }
+    async function handleResendOtp(e) { e.preventDefault(); if (!tempRegistrationData.email) return; try { await apiRequest('/auth/send-otp', 'POST', { email: tempRegistrationData.email, role: state.selectedRole }); Swal.fire('Success', 'A new OTP has been sent.', 'success'); startResendTimer(); } catch (error) { Swal.fire('Error', error.message, 'error'); } }
+    
+    // --- UPDATED: HANDLE LOGIN (WITH EMAIL CHECK) ---
+    async function handleLogin(e) { 
+        e.preventDefault(); 
+        const email = getElem('email').value.trim();
+        
+        // CHECK: If logging in as Faculty, enforce domain check locally too
+        if (state.selectedRole === 'faculty' && !email.endsWith('@iust.ac.in')) {
+            return Swal.fire('Restriction', 'Faculty members must login with an official <b>@iust.ac.in</b> email address.', 'error');
+        }
+
+        try { 
+            const data = await apiRequest('/auth/login', 'POST', { email: email, password: getElem('password').value, role: state.selectedRole }); 
+            localStorage.setItem('authToken', data.token); localStorage.setItem('currentUser', JSON.stringify(data.user)); state.currentUser = data.user; await initApp(); 
+        } catch (error) { Swal.fire('Login Failed', error.message, 'error'); } 
+    }
+
     function handleLogout() { localStorage.clear(); window.location.reload(); }
 
     async function initApp() { getElem('login-page').classList.add('hidden'); getElem('dashboard-container').classList.remove('hidden'); setupUserInterface(state.currentUser); setupDashboardEventListeners(); await switchSection('dashboard'); }
