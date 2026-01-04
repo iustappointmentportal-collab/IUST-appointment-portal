@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IUST Appointment Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>IUST Appointment Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -19,6 +18,7 @@
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Login Page Styles */
         #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background: linear-gradient(135deg, #1d2834 0%, #2c3e50 100%); }
         .login-container { max-width: 500px; width: 100%; background-color: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 2rem; }
         .login-options { display: flex; gap: 1rem; margin-bottom: 2rem; }
@@ -30,11 +30,13 @@
         .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; text-align: left; }
         .form-control { width: 100%; padding: 0.8rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
         
+        /* Buttons */
         .btn { padding: 0.8rem 1.5rem; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; transition: all 0.3s ease; width: 100%; font-size: 1rem; }
         .btn:hover { filter: brightness(110%); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .btn-primary { background-color: var(--secondary); } .btn-secondary { background-color: var(--gray); } .btn-success { background-color: var(--success); } .btn-danger { background-color: var(--danger); } .btn-warning { background-color: var(--warning); }
         .btn-sm { padding: 0.5rem 1rem; font-size: 0.9rem; width: auto; }
         
+        /* Layout & Header */
         header { background-color: white; color: var(--primary); padding: 0 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; min-height: 70px; }
         .logo { display: flex; align-items: center; gap: 1rem; } .logo img { height: 40px; } .logo h1 { font-size: 1.3rem; font-weight: 600; }
@@ -42,9 +44,9 @@
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--secondary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background-size: cover; background-position: center; }
         #logout-button { background: none; border: none; color: var(--primary-dark); cursor: pointer; padding: 0.5rem 0.8rem; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
         #logout-button:hover { background: var(--light); }
-
         .nav-toggle-btn { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--primary-dark); padding: 0.5rem; }
         
+        /* Main Dashboard Structure */
         main { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
         .dashboard { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; }
         .sidebar { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 1.5rem; height: fit-content; position: sticky; top: 90px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
@@ -58,13 +60,17 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
         .section-header h2 { font-size: 1.8rem; font-weight: 600; }
 
-        table { width: 100%; border-collapse: collapse; }
+        /* Tables */
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; /* Force min-width so table doesn't squash on mobile */ }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { font-weight: 600; font-size: 0.9rem; color: #555; }
+        th { font-weight: 600; font-size: 0.9rem; color: #555; background-color: #f8f9fa; white-space: nowrap; }
+        
         .status { padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; color: white; text-transform: capitalize; font-weight: 500; }
         .status.approved { background-color: var(--success); } .status.pending { background-color: var(--warning); } .status.rejected { background-color: var(--danger); } .status.rescheduled { background-color: var(--faculty); }
         .action-buttons { display: flex; gap: 0.5rem; }
         
+        /* Stats & Grid */
         .quick-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem; }
         .stat-card { background: var(--light); padding: 1.5rem; border-radius: 8px; text-align: center; }
         .stat-card h3 { font-size: 0.9rem; color: #7f8c8d; } .stat-number { font-size: 2.5rem; font-weight: bold; }
@@ -76,59 +82,27 @@
         .faculty-info h3 { font-size: 1.1rem; } .faculty-info .department { color: #7f8c8d; font-size: 0.9rem; }
         .faculty-card .book-appointment-btn { margin-top: auto; width: 100%; }
 
-        /* --- OFFICE BOX STYLES --- */
-        .office-location-box {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 0.75rem;
-            margin-top: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            color: #495057;
-        }
-        .office-location-text {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 65%;
-        }
-        .nav-btn-small {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
+        /* Office Box Styles */
+        .office-location-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #495057; }
+        .office-location-text { display: flex; align-items: center; gap: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
+        .nav-btn-small { background-color: #3498db; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; transition: background 0.2s; }
         .nav-btn-small:hover { background-color: #2980b9; }
 
         .office-location-info { display: flex; justify-content: space-between; align-items: center; background-color: var(--light); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.9rem; }
         .nav-link-btn { background-color: var(--secondary); color: white; padding: 0.3rem 0.8rem; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: background-color 0.2s; }
-        .nav-link-btn:hover { background-color: var(--primary-dark); }
-        .nav-link-btn .fa-map-marker-alt { margin-right: 0.4rem; }
+        .nav-link-btn:hover { background-color: var(--primary-dark); } .nav-link-btn .fa-map-marker-alt { margin-right: 0.4rem; }
 
-        .profile-card { max-width: 600px; }
+        /* Profile & Availability */
+        .profile-card { max-width: 600px; width: 100%; }
         .profile-header { text-align: center; margin-bottom: 1.5rem; position: relative; }
         .profile-photo-container { position: relative; display: inline-block; }
         .profile-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 4px solid var(--secondary); background-color: var(--light); }
         #change-photo-btn { position: absolute; bottom: 15px; right: 5px; background-color: white; border-radius: 50%; width: 35px; height: 35px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
         #change-photo-btn:hover { background-color: var(--secondary); color: white; transform: scale(1.1); }
-        .profile-details .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #ecf0f1; }
+        .profile-details .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #ecf0f1; flex-wrap: wrap; gap: 0.5rem; }
         .profile-details .detail-item label { font-weight: bold; min-width: 120px; }
 
-        .availability-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 1rem; user-select: none; }
+        .availability-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 1rem; user-select: none; min-width: 500px; }
         .availability-table th, .availability-table td { border: 1px solid var(--border-color); padding: 0.5rem; text-align: center; vertical-align: middle; }
         .availability-table th { background-color: var(--light); font-weight: 600; font-size: 0.9rem; padding: 0.8rem 0.5rem; }
         .availability-table .time-label { font-weight: 500; font-size: 0.85rem; color: var(--gray); width: 80px; }
@@ -145,40 +119,66 @@
         .time-slot-btn.selected { background-color: var(--success); color: white; border-color: var(--success); font-weight: 500; }
         .no-slots { color: var(--gray); font-style: italic; }
         
-        .swal-faculty-profile { text-align: left; }
-        .swal-faculty-profile .profile-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-        .swal-faculty-profile .profile-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
-        .swal-faculty-profile h3 { margin: 0; }
-        .swal-faculty-profile .department { color: #7f8c8d; }
-        .swal-faculty-profile .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.5rem; margin: 1rem 0; }
-        .swal-faculty-profile .detail-item { padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); }
-        .swal-faculty-profile .detail-item strong { color: var(--primary-dark); }
-        .swal-faculty-profile .availability-section h4 { margin-top: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
-        .swal-faculty-profile .availability-list { list-style: none; padding: 0; font-size: 0.9rem; }
-        .swal-faculty-profile .availability-list li { padding: 0.25rem 0; }
-
         #backdrop-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
         #backdrop-overlay.active { opacity: 1; visibility: visible; }
         
-        /* Sidebar Media Query */
-        @media (max-width: 992px) { .dashboard { grid-template-columns: 1fr; } .sidebar { position: fixed; left: 0; top: 0; height: 100%; width: 280px; z-index: 1001; transform: translateX(-100%); border-radius: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } .sidebar.active { transform: translateX(0); } .content { order: 1; } .nav-toggle-btn { display: block; } }
+        /* --- MEDIA QUERIES (RESPONSIVE DESIGN) --- */
+        
+        /* Tablets & Smaller Laptops */
+        @media (max-width: 992px) { 
+            .dashboard { grid-template-columns: 1fr; } 
+            .sidebar { position: fixed; left: 0; top: 0; height: 100%; width: 280px; z-index: 1001; transform: translateX(-100%); border-radius: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } 
+            .sidebar.active { transform: translateX(0); } 
+            .content { order: 1; margin-top: 1rem; } 
+            .nav-toggle-btn { display: block; } 
+        }
 
-        /* --- MOBILE OPTIMIZATIONS --- */
+        /* Mobile Phones (Landscape & Portrait) */
         @media (max-width: 768px) {
-            .logo h1 { display: none; }
-            #logout-button span { display: none; }
+            .header-container { padding: 0 0.5rem; }
+            .logo h1 { font-size: 1.1rem; } 
+            #logout-button span { display: none; } 
             #logout-button { padding: 0.5rem; }
             .user-info { gap: 0.5rem; }
             .user-avatar { width: 35px; height: 35px; font-size: 0.9rem; }
-            .faculty-grid { grid-template-columns: 1fr; }
-            .quick-stats { grid-template-columns: 1fr; }
-            .content-section { overflow-x: hidden; }
+            .faculty-grid { grid-template-columns: 1fr; } /* Single column cards */
+            .quick-stats { grid-template-columns: 1fr; } 
+            .section-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .section-header button, .section-header .filter-controls { width: 100%; }
+            .filter-controls { flex-direction: column; width: 100%; }
+            .filter-controls select, .filter-controls input { width: 100% !important; margin-bottom: 0.5rem; }
+            .content { padding: 1.5rem 1rem; }
         }
 
+        /* Small Phones */
         @media (max-width: 480px) {
-            .login-container { padding: 1.5rem; }
-            .login-options h3 { font-size: 0.9rem; }
+            .login-container { padding: 1.5rem 1rem; }
+            .login-options { flex-direction: column; gap: 0.5rem; }
+            .login-option { padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem; }
+            .login-option i { font-size: 1.5rem; margin-bottom: 0; }
+            .login-option h3 { margin: 0; font-size: 1rem; }
+            h2 { font-size: 1.5rem; }
+            .stat-number { font-size: 2rem; }
         }
+
+        /* --- UNIVERSAL "ADJUST EVERYTHING" RESET --- */
+        /* This section forces all stubborn elements to behave on mobile */
+        
+        html, body { max-width: 100%; overflow-x: hidden; }
+        
+        /* Force media to fit */
+        img, svg, video, iframe { max-width: 100% !important; height: auto !important; }
+        
+        /* Force text to wrap */
+        p, span, label, li { word-wrap: break-word; overflow-wrap: break-word; }
+        
+        /* Fix input zoom on mobile and width */
+        input, select, textarea { font-size: 16px !important; max-width: 100%; }
+        
+        /* FORCE Popup (SweetAlert) to fit screen */
+        div.swal2-popup { width: 90% !important; max-width: 100% !important; font-size: 0.9rem !important; padding: 1rem !important; }
+        .swal2-input, .swal2-textarea, .swal2-select { width: 100% !important; margin: 1rem auto !important; }
+        
     </style>
 </head>
 <body>
@@ -284,7 +284,7 @@
     
     function setupDashboardEventListeners() { 
         getElem('logout-button').addEventListener('click', handleLogout); 
-        document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchSection(link.dataset.section); if (getElem('sidebar').classList.contains('active')) toggleSidebar(); })); 
+        document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchSection(link.dataset.section); if (window.innerWidth < 992 && getElem('sidebar').classList.contains('active')) toggleSidebar(); })); 
         getElem('book-appointment-btn')?.addEventListener('click', () => showNewAppointmentModal()); 
         getElem('appointments-list').addEventListener('click', (e) => { const statusBtn = e.target.closest('.status-btn'); if (statusBtn) handleAppointmentStatusUpdate(statusBtn.dataset.id, statusBtn.dataset.status); const rescheduleBtn = e.target.closest('.reschedule-btn'); if (rescheduleBtn) handleAppointmentReschedule(rescheduleBtn.dataset.id, rescheduleBtn.dataset.date, rescheduleBtn.dataset.time);}); 
         getElem('faculty-list').addEventListener('click', (e) => { const bookBtn = e.target.closest('.book-appointment-btn'); if (bookBtn) showNewAppointmentModal(bookBtn.dataset.facultyId); const profileBtn = e.target.closest('.view-profile-btn'); if(profileBtn) showFacultyProfileModal(profileBtn.dataset.facultyId); }); 
@@ -323,7 +323,8 @@
             }
             return `<tr><td>${participantName}</td><td>${app.purpose}</td><td>${app.date} at ${app.time}</td><td><span class="status ${app.status.toLowerCase()}">${app.status}</span></td>${isUserFaculty ? `<td>${actions}</td>` : ''}</tr>`;
         }).join('');
-        container.innerHTML = `<table style="overflow-x: auto; display: block;"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+        // Add table-wrapper for mobile scroll
+        container.innerHTML = `<div class="table-wrapper"><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
 
     async function handleAppointmentStatusUpdate(id, status) { const result = await Swal.fire({ title: 'Confirm Action', text: `Are you sure you want to ${status}?`, icon: 'warning', showCancelButton: true }); if (result.isConfirmed) { try { await apiRequest(`/appointments/${id}/status`, 'POST', { status }); Swal.fire('Success!', `Appointment ${status}.`, 'success'); await Promise.all([loadAppointmentsData(), loadDashboardData()]); } catch (error) { Swal.fire('Error', error.message, 'error'); } } }
@@ -386,7 +387,7 @@
                            <textarea id="swal-purpose" class="form-control" rows="3" placeholder="Briefly describe the purpose..." style="font-size: 0.95rem; font-family: inherit;"></textarea>
                        </div>
                       </form>`,
-            width: '600px', 
+            width: window.innerWidth < 600 ? '95%' : '600px', // Mobile Responsive width
             showCancelButton: true, 
             confirmButtonText: '<i class="fas fa-paper-plane"></i> Submit Request',
             cancelButtonText: 'Cancel',
@@ -406,9 +407,6 @@
                     if (faculty && faculty.office) {
                         const isUrl = faculty.office.startsWith('http');
                         const mapUrl = isUrl ? faculty.office : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('IUST, Awantipora, ' + faculty.office)}`;
-                        
-                        // --- UPDATED LOGIC HERE ---
-                        // If it's a URL, show "View Map Location" instead of "Floor No: ..."
                         const locationText = isUrl ? "View Map Location" : `Floor No: ${faculty.office}`;
                         
                         officeContainer.innerHTML = `
@@ -538,7 +536,7 @@
     async function showEditProfileModal() { const p = state.currentUser; const isStudent = p.role === 'student'; const deptOptions = departmentsList.map(d => `<option value="${d}" ${p.department === d ? 'selected' : ''}>${d}</option>`).join(''); const studentFields = `<div class="form-group"><label class="swal-label" for="swal-year">Year/Semester</label><select id="swal-year" class="swal2-input">${['1st Year','2nd Year','3rd Year','4th Year'].map(y => `<option value="${y}" ${p.year_semester === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>`; const facultyFields = `<div class="form-group"><label class="swal-label" for="swal-designation">Designation</label><select id="swal-designation" class="swal2-input">${['Professor','Associate Professor','Assistant Professor'].map(d => `<option value="${d}" ${p.designation === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div><div class="form-group"><label class="swal-label" for="swal-office">Office (Manual Entry)</label><input id="swal-office" class="swal2-input" value="${p.office || ''}"></div>`; const { value: formValues } = await Swal.fire({ title: 'Edit My Profile', html: `<div class="form-group"><label class="swal-label" for="swal-name">Full Name</label><input id="swal-name" class="swal2-input" value="${p.name}"></div><div class="form-group"><label class="swal-label" for="swal-phone">Phone</label><input id="swal-phone" class="swal2-input" value="${p.phone || ''}"></div><div class="form-group"><label class="swal-label" for="swal-department">Department</label><select id="swal-department" class="swal2-input">${deptOptions}</select></div>${isStudent ? studentFields : facultyFields}`, showCancelButton: true, confirmButtonText: 'Save Changes', focusConfirm: false, preConfirm: () => { const values = { name: getElem('swal-name').value, phone: getElem('swal-phone').value, department: getElem('swal-department').value, }; if(isStudent) values.yearSemester = getElem('swal-year').value; else { values.designation = getElem('swal-designation').value; values.office = getElem('swal-office').value; } return values; } }); if (formValues) { try { const { user } = await apiRequest('/users/profile', 'PUT', formValues); localStorage.setItem('currentUser', JSON.stringify(user)); setupUserInterface(user); renderProfile(user); Swal.fire('Success!', 'Your profile has been updated.', 'success'); } catch (error) { Swal.fire('Error!', error.message, 'error'); } } }
     async function showUploadAvatarModal() { const { value: file } = await Swal.fire({ title: 'Upload Photo', input: 'file' }); if (file) { const fd = new FormData(); fd.append('avatar', file); await apiRequest('/users/profile/avatar', 'POST', fd, false); loadProfileData(); } }
     async function loadAvailabilityData() { const p = await apiRequest('/users/profile'); state.availability = p.availability || {}; renderAvailabilityGrid(); }
-    function renderAvailabilityGrid() { const c = getElem('availability-grid-container'); if(!c) return; let h = '<table class="availability-table"><thead><tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr></thead><tbody>'; const times = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']; const days = ['monday','tuesday','wednesday','thursday','friday']; times.forEach(t => { h += `<tr><td>${t}</td>`; days.forEach(d => { const active = state.availability[d]?.includes(t) ? 'available' : ''; h += `<td class="time-slot ${active}" data-d="${d}" data-t="${t}"></td>`; }); h += '</tr>'; }); c.innerHTML = h + '</tbody></table>'; c.querySelector('tbody').addEventListener('click', e => { const td = e.target.closest('td'); if(!td.dataset.d) return; const {d,t} = td.dataset; if(state.availability[d]?.includes(t)) state.availability[d]=state.availability[d].filter(x=>x!==t); else (state.availability[d]||(state.availability[d]=[])).push(t); td.classList.toggle('available'); }); }
+    function renderAvailabilityGrid() { const c = getElem('availability-grid-container'); if(!c) return; let h = '<table class="availability-table"><thead><tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr></thead><tbody>'; const times = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']; const days = ['monday','tuesday','wednesday','thursday','friday']; times.forEach(t => { h += `<tr><td>${t}</td>`; days.forEach(d => { const active = state.availability[d]?.includes(t) ? 'available' : ''; h += `<td class="time-slot ${active}" data-d="${d}" data-t="${t}"></td>`; }); h += '</tr>'; }); c.innerHTML = '<div class="table-wrapper">' + h + '</tbody></table></div>'; c.querySelector('tbody').addEventListener('click', e => { const td = e.target.closest('td'); if(!td.dataset.d) return; const {d,t} = td.dataset; if(state.availability[d]?.includes(t)) state.availability[d]=state.availability[d].filter(x=>x!==t); else (state.availability[d]||(state.availability[d]=[])).push(t); td.classList.toggle('available'); }); }
     async function handleSaveAvailability() { await apiRequest('/faculty/profile/availability', 'PUT', { availability: state.availability }); Swal.fire('Saved!', '', 'success'); }
 
     document.addEventListener('DOMContentLoaded', () => {
