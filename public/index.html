@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>IUST Appointment Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>IUST Appointment Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -157,7 +158,7 @@
             .stat-number { font-size: 2rem; }
         }
 
-        /* --- UNIVERSAL RESET (Prevents broken layouts) --- */
+        /* --- UNIVERSAL RESET --- */
         html, body { max-width: 100%; overflow-x: hidden; }
         img, svg, video, iframe { max-width: 100% !important; height: auto !important; }
         p, span, label, li { word-wrap: break-word; overflow-wrap: break-word; }
@@ -298,7 +299,7 @@
             if (e.target.id === 'back-to-register-link') backToRegister(e); 
             if (e.target.id === 'resend-otp-link') handleResendOtp(e);
             
-            // New Forgot Password Listeners
+            // Forgot Password Listeners
             if (e.target.id === 'forgot-pw-link') toggleAuthView(e, 'forgot');
             if (e.target.classList.contains('back-to-login-link')) toggleAuthView(e, 'login');
 
@@ -479,11 +480,33 @@
         }).join(''); 
     }
 
-    async function showNewAppointmentModal(facultyId = null) {
+    // --- NEW: HIERARCHICAL BOOKING MODAL ---
+    async function showNewAppointmentModal(preSelectedFacultyId = null) {
         if (state.faculty.length === 0) await loadFacultyData();
 
+        const uniqueDepartments = [...new Set(state.faculty.map(f => f.department))].filter(Boolean).sort();
+        
+        const getFacultyOptions = (dept) => {
+            if (!dept) return '<option value="">-- Select Department First --</option>';
+            return '<option value="">-- Select Faculty --</option>' + 
+                state.faculty
+                .filter(f => f.department === dept)
+                .map(f => `<option value="${f.id}">${f.name} (${f.designation || 'Faculty'})</option>`)
+                .join('');
+        };
+
+        let initialDept = '';
+        let initialFacultyOptions = '<option value="">-- Select Department First --</option>';
+        if (preSelectedFacultyId) {
+            const preSelected = state.faculty.find(f => f.id == preSelectedFacultyId);
+            if (preSelected) {
+                initialDept = preSelected.department;
+                initialFacultyOptions = getFacultyOptions(initialDept);
+            }
+        }
+
         async function renderTimeSlots(fid, date, slotsContainer) {
-            if (!fid || !date) { slotsContainer.innerHTML = '<p class="no-slots">Please select a faculty and a date.</p>'; return; }
+            if (!fid || !date) { slotsContainer.innerHTML = '<p class="no-slots">Select faculty and date first.</p>'; return; }
             try {
                 slotsContainer.innerHTML = '<p class="no-slots">Loading slots...</p>';
                 const profile = await apiRequest(`/faculty/${fid}`);
@@ -491,7 +514,7 @@
                 const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][selectedDate.getUTCDay()];
                 
                 if (selectedDate.getUTCDay() === 0 || selectedDate.getUTCDay() === 6) {
-                    slotsContainer.innerHTML = `<p class="no-slots" style="color:var(--danger);">No appointments available on ${dayOfWeek}.</p>`; return;
+                    slotsContainer.innerHTML = `<p class="no-slots" style="color:var(--danger);">No appointments on ${dayOfWeek}.</p>`; return;
                 }
                 const availableTimes = (profile.availability && profile.availability[dayOfWeek]) ? profile.availability[dayOfWeek] : [];
                 slotsContainer.innerHTML = availableTimes.length ? availableTimes.sort().map(time => `<button type="button" class="time-slot-btn" data-time="${time}">${time}</button>`).join('') : '<p class="no-slots">No available slots.</p>';
@@ -499,36 +522,46 @@
         }
 
         let selectedTime = null;
-        const facultyOptions = state.faculty.map(f => `<option value="${f.id}" ${f.id == facultyId ? 'selected' : ''}>${f.name} - ${f.department}</option>`).join('');
-        
+
         Swal.fire({
             title: 'Book a New Appointment',
-            html: `<form id="booking-form" style="text-align: left;">
-                       <div class="form-group" style="margin-bottom: 1rem;">
-                           <label for="swal-faculty-id" class="form-label" style="font-weight: 600;">Faculty</label>
-                           <select id="swal-faculty-id" class="form-control" style="font-size: 0.95rem;">${facultyOptions}</select>
-                           <div id="swal-office-location"></div>
-                       </div>
-                       <div class="form-group" style="margin-bottom: 1rem;">
-                           <label for="swal-date" class="form-label" style="font-weight: 600;">Date</label>
-                           <input type="date" id="swal-date" class="form-control" style="font-size: 0.95rem;">
-                       </div>
-                       <div class="form-group" style="margin-bottom: 1rem;">
-                           <label class="form-label" style="font-weight: 600;">Available Time Slots</label>
-                           <div id="swal-slots-container" class="time-slots-container"><p class="no-slots" style="color: #999; font-style: italic;">Please select both a faculty and a date.</p></div>
-                       </div>
-                       <div class="form-group">
-                           <label for="swal-purpose" class="form-label" style="font-weight: 600;">Purpose of Appointment</label>
-                           <textarea id="swal-purpose" class="form-control" rows="3" placeholder="Briefly describe the purpose..." style="font-size: 0.95rem; font-family: inherit;"></textarea>
-                       </div>
-                      </form>`,
-            width: window.innerWidth < 600 ? '95%' : '600px', // Mobile Responsive width
+            html: `
+                <form id="booking-form" style="text-align: left;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-weight: 600;">1. Select Department</label>
+                        <select id="swal-dept-select" class="form-control" style="font-size: 0.95rem;">
+                            <option value="">-- Select Department --</option>
+                            ${uniqueDepartments.map(d => `<option value="${d}" ${d === initialDept ? 'selected' : ''}>${d}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="swal-faculty-id" class="form-label" style="font-weight: 600;">2. Select Faculty</label>
+                        <select id="swal-faculty-id" class="form-control" style="font-size: 0.95rem;" ${!initialDept ? 'disabled' : ''}>
+                            ${initialFacultyOptions}
+                        </select>
+                        <div id="swal-office-location"></div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="swal-date" class="form-label" style="font-weight: 600;">3. Date</label>
+                        <input type="date" id="swal-date" class="form-control" style="font-size: 0.95rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-weight: 600;">4. Available Time Slots</label>
+                        <div id="swal-slots-container" class="time-slots-container"><p class="no-slots" style="color: #999; font-style: italic;">Select faculty and date first.</p></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-purpose" class="form-label" style="font-weight: 600;">Purpose</label>
+                        <textarea id="swal-purpose" class="form-control" rows="3" placeholder="Briefly describe the purpose..." style="font-size: 0.95rem; font-family: inherit;"></textarea>
+                    </div>
+                </form>`,
+            width: window.innerWidth < 600 ? '95%' : '600px',
             showCancelButton: true, 
             confirmButtonText: '<i class="fas fa-paper-plane"></i> Submit Request',
             cancelButtonText: 'Cancel',
             confirmButtonColor: '#6c5ce7',
             cancelButtonColor: '#636e72',
             didOpen: () => {
+                const deptSelect = document.getElementById('swal-dept-select');
                 const fSelect = document.getElementById('swal-faculty-id');
                 const dInput = document.getElementById('swal-date');
                 const sCont = document.getElementById('swal-slots-container');
@@ -537,42 +570,39 @@
                 const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
                 dInput.setAttribute('min', tomorrow.toISOString().split('T')[0]);
                 
-                const updateOfficeLocation = (selectedFacultyId) => {
+                const updateOfficeLocation = () => {
+                    const selectedFacultyId = fSelect.value;
                     const faculty = state.faculty.find(f => f.id == selectedFacultyId);
                     if (faculty && faculty.office) {
                         const isUrl = faculty.office.startsWith('http');
                         const mapUrl = isUrl ? faculty.office : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('IUST, Awantipora, ' + faculty.office)}`;
                         const locationText = isUrl ? "View Map Location" : `Floor No: ${faculty.office}`;
-                        
-                        officeContainer.innerHTML = `
-                            <div class="office-location-box">
-                                <div class="office-location-text" title="${faculty.office}">
-                                    <i class="fas fa-building" style="color: #666;"></i> 
-                                    <span>${locationText}</span>
-                                </div>
-                                <a href="${mapUrl}" target="_blank" class="nav-btn-small">
-                                    <i class="fas fa-location-arrow"></i> Show Navigation
-                                </a>
-                            </div>`;
+                        officeContainer.innerHTML = `<div class="office-location-box"><div class="office-location-text" title="${faculty.office}"><i class="fas fa-building" style="color: #666;"></i> <span>${locationText}</span></div><a href="${mapUrl}" target="_blank" class="nav-btn-small"><i class="fas fa-location-arrow"></i> Show Navigation</a></div>`;
                     } else { officeContainer.innerHTML = ''; }
                 };
 
                 const updateAll = () => {
                     const fid = fSelect.value; const date = dInput.value; selectedTime = null;
-                    updateOfficeLocation(fid);
+                    updateOfficeLocation();
                     if (!fid || !date) { sCont.innerHTML = '<p class="no-slots" style="color: #999; font-style: italic;">Please select both a faculty and a date.</p>'; return; }
                     const d = new Date(date);
                     if (d.getUTCDay() === 0 || d.getUTCDay() === 6) { sCont.innerHTML = '<p class="no-slots" style="color:var(--danger);">Please select a weekday.</p>'; return; }
                     renderTimeSlots(fid, date, sCont);
                 };
 
+                deptSelect.addEventListener('change', (e) => {
+                    const dept = e.target.value;
+                    if (dept) { fSelect.innerHTML = getFacultyOptions(dept); fSelect.disabled = false; } else { fSelect.innerHTML = '<option value="">-- Select Department First --</option>'; fSelect.disabled = true; }
+                    fSelect.value = ""; officeContainer.innerHTML = ""; sCont.innerHTML = '<p class="no-slots">Select faculty and date.</p>';
+                });
+
+                if (preSelectedFacultyId) { fSelect.value = preSelectedFacultyId; updateOfficeLocation(); }
                 fSelect.addEventListener('change', updateAll);
                 dInput.addEventListener('input', updateAll);
                 sCont.addEventListener('click', (e) => {
                     const btn = e.target.closest('.time-slot-btn');
                     if (btn) { sCont.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedTime = btn.dataset.time; }
                 });
-                updateAll();
             },
             preConfirm: () => {
                 const fid = document.getElementById('swal-faculty-id').value;
