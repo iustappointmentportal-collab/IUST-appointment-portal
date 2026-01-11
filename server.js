@@ -46,7 +46,10 @@ const upload = multer({
 
 // --- Nodemailer Setup ---
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', port: 587, secure: false,
+    // Using environment variables for host/port to support Brevo or Gmail
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com', 
+    port: process.env.EMAIL_PORT || 587, 
+    secure: false,
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
 });
 console.log('Nodemailer transporter configured.');
@@ -72,13 +75,12 @@ app.use('/uploads/avatars', express.static(avatarUploadPath));
 
 // --- PostgreSQL Connection ---
 // CRITICAL FIX: Use the single DATABASE_URL connection string from the .env file.
-// This is the correct method for connecting to Neon, as it handles SSL automatically.
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
 console.log('PostgreSQL Connection Pool created.');
 
-// --- In-Memory OTP Storage ---
+// --- In-Memory OTP Storage (For Registration) ---
 const otpStore = {};
 
 // --- Helper function to validate appointment times against business rules ---
@@ -99,96 +101,6 @@ const isAppointmentTimeValid = (date, time) => {
 
     return true; // The time is valid.
 };
-
-// --- Database Setup Function ---
-async function setupDatabase() {
-    console.log('---!! RUNNING DATABASE SETUP !!---');
-    const client = await pool.connect();
-    try {
-        const setupQuery = `
-            DROP TABLE IF EXISTS appointments;
-            DROP TABLE IF EXISTS faculty_profiles;
-            DROP TABLE IF EXISTS users;
-
-            CREATE TABLE users (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                role VARCHAR(50) NOT NULL,
-                avatar_url VARCHAR(255),
-                year_semester VARCHAR(100),
-                department VARCHAR(255),
-                designation VARCHAR(255),
-                office VARCHAR(255),
-                phone VARCHAR(20),
-                created_at TIMESTAMPTZ DEFAULT NOW()
-            );
-
-            CREATE TABLE faculty_profiles (
-                user_id INT PRIMARY KEY,
-                availability JSONB DEFAULT '{}'::jsonb,
-                google_refresh_token TEXT,
-                CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-
-            CREATE TABLE appointments (
-                id SERIAL PRIMARY KEY,
-                student_id INT NOT NULL,
-                faculty_id INT NOT NULL,
-                purpose TEXT NOT NULL,
-                date VARCHAR(50) NOT NULL,
-                time VARCHAR(50) NOT NULL,
-                status VARCHAR(50) DEFAULT 'pending',
-                created_at TIMESTAMPTZ DEFAULT NOW(),
-                CONSTRAINT fk_student FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE,
-                CONSTRAINT fk_faculty FOREIGN KEY(faculty_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-
-            CREATE INDEX idx_appointments_student_id ON appointments(student_id);
-            CREATE INDEX idx_appointments_faculty_id ON appointments(faculty_id);
-        `;
-        await client.query(setupQuery);
-        console.log('Tables created successfully.');
-
-        const salt = await bcrypt.genSalt(10);
-        const facultyPasswordHash = await bcrypt.hash('password', salt);
-        const studentPasswordHash = await bcrypt.hash('password', salt);
-
-        const facultyResult = await client.query(
-            `INSERT INTO users (name, email, password, role, department, designation, office, phone)
-             VALUES ($1, $2, $3, 'faculty', 'Computer Science Engineering', 'Professor', 'Block IV - S01', '1234567890')
-             RETURNING id`,
-            ['Dr. Muzafar Rasool', 'm.rasool@iust.ac.in', facultyPasswordHash]
-        );
-        console.log('Faculty user inserted.');
-
-        await client.query(
-            `INSERT INTO users (name, email, password, role, department, year_semester, phone)
-             VALUES ($1, $2, $3, 'student', 'Computer Science Engineering', '3rd Year', '0987654321')`,
-            ['Syed Afaan', 'afaan@s.com', studentPasswordHash]
-        );
-        console.log('Student user inserted.');
-
-        const defaultAvailability = JSON.stringify({
-            "monday": ["09:00", "10:00", "11:00"], "tuesday": ["14:00", "15:00"],
-            "wednesday": ["09:00", "10:00", "11:00", "12:00"], "thursday": [],
-            "friday": ["14:00", "15:00", "16:00"]
-        });
-
-        await client.query(
-            'INSERT INTO faculty_profiles (user_id, availability) VALUES ($1, $2)',
-            [facultyResult.rows[0].id, defaultAvailability]
-        );
-        console.log('Faculty profile created with default availability.');
-
-        console.log('---!! DATABASE SETUP COMPLETE !!---');
-    } catch (error) {
-        console.error('---!! DATABASE SETUP FAILED !!---', error);
-    } finally {
-        client.release();
-    }
-}
 
 // --- Middleware to verify JWT token ---
 const authMiddleware = (req, res, next) => {
@@ -215,7 +127,10 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-// --- AUTHENTICATION & REGISTRATION APIS ---
+// =================================================================
+//                 AUTHENTICATION & REGISTRATION APIS
+// =================================================================
+
 app.post('/api/auth/login', async (req, res) => {
     const { email, password, role } = req.body;
 
@@ -223,7 +138,6 @@ app.post('/api/auth/login', async (req, res) => {
     if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
         return res.status(403).json({ message: 'Access Denied: Faculty must log in with an official @iust.ac.in email address.' });
     }
-    // ----------------------------------------------------
 
     try {
         const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -252,7 +166,6 @@ app.post('/api/auth/send-otp', async (req, res) => {
     if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
         return res.status(403).json({ message: 'Restricted: Faculty must use an official @iust.ac.in email address.' });
     }
-    // -------------------------------------------------------------
 
     try {
         const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -277,7 +190,6 @@ app.post('/api/auth/register', async (req, res) => {
     if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
         return res.status(403).json({ message: 'Restricted: Faculty must register with an official @iust.ac.in email address.' });
     }
-    // ------------------------------------------------------------
 
     try {
         const storedOtpData = otpStore[email];
@@ -317,8 +229,90 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
+// --- NEW: FORGOT PASSWORD (REQUEST OTP) ---
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
 
-// --- FACULTY & PROFILE APIS ---
+        // Check if user exists
+        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found with this email.' });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Set expiration (10 minutes from now)
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); 
+
+        // Delete any old OTPs for this user first
+        await pool.query('DELETE FROM password_resets WHERE email = $1', [email]);
+        
+        // Save new OTP to database
+        await pool.query(
+            'INSERT INTO password_resets (email, otp, expires_at) VALUES ($1, $2, $3)',
+            [email, otp, expiresAt]
+        );
+
+        // Send Email using your existing Transporter
+        await transporter.sendMail({
+            from: `"IUST Portal" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Reset Your Password - IUST Portal',
+            text: `Your OTP for password reset is: ${otp}\n\nThis code expires in 10 minutes.`,
+            html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2>Password Reset Request</h2>
+                    <p>You requested to reset your password. Use the code below:</p>
+                    <h1 style="color: #2c3e50; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
+                    <p>If you did not request this, please ignore this email.</p>
+                   </div>`
+        });
+
+        res.json({ message: 'OTP sent to your email successfully.' });
+
+    } catch (err) {
+        console.error('Forgot Password Error:', err);
+        res.status(500).json({ message: 'Server error sending OTP.' });
+    }
+});
+
+// --- NEW: RESET PASSWORD (VERIFY & UPDATE) ---
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        // Verify OTP matches and hasn't expired
+        const resetCheck = await pool.query(
+            'SELECT * FROM password_resets WHERE email = $1 AND otp = $2 AND expires_at > NOW()',
+            [email, otp]
+        );
+
+        if (resetCheck.rows.length === 0) {
+            return res.status(400).json({ message: 'Invalid or expired OTP.' });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update the User's password
+        await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email]);
+
+        // Cleanup: Delete the used OTP so it can't be used again
+        await pool.query('DELETE FROM password_resets WHERE email = $1', [email]);
+
+        res.json({ message: 'Password has been reset successfully! You can now login.' });
+
+    } catch (err) {
+        console.error('Reset Password Error:', err);
+        res.status(500).json({ message: 'Server error resetting password.' });
+    }
+});
+
+// =================================================================
+//                     FACULTY & PROFILE APIS
+// =================================================================
+
 app.get('/api/faculty', authMiddleware, async (req, res) => {
     try {
         let query = "SELECT id, name, email, department, designation, office, avatar_url FROM users WHERE role = 'faculty'";
@@ -601,30 +595,24 @@ app.get('*', (req, res) => {
 // --- Start Server & Graceful Shutdown ---
 const server = app.listen(PORT, async () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    //await setupDatabase(); // IMPORTANT: Run this once to set up your DB, then comment it out.
 });
 
 const gracefulShutdown = () => {
     console.log('\nReceived shutdown signal. Closing server gracefully...');
 
-    // 1. Stop the server from accepting new connections
     server.close(() => {
         console.log('Express server closed.');
-
-        // 2. Close the database pool to end all connections
         pool.end(() => {
             console.log('Database pool has been closed.');
             process.exit(0);
         });
     });
 
-    // Force shutdown if it takes too long
     setTimeout(() => {
         console.error('Could not close connections in time, forcefully shutting down.');
         process.exit(1);
-    }, 10000); // 10-second timeout
+    }, 10000);
 };
 
-// Listen for termination signals (e.g., Ctrl+C, nodemon restart)
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);

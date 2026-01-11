@@ -173,10 +173,16 @@
             <div class="logo" style="justify-content: center; margin-bottom: 2rem;"><img src="https://iust.ac.in/wp-content/uploads/2020/12/IUST-Logo.png" alt="IUST Logo" style="height: 50px;"><h1 style="font-size: 1.8rem;">IUST Portal</h1></div>
             <div id="auth-container">
                 <div class="login-options"><div class="login-option faculty" data-role="faculty"><i class="fas fa-chalkboard-teacher"></i><h3>Faculty</h3></div><div class="login-option student active" data-role="student"><i class="fas fa-user-graduate"></i><h3>Student</h3></div></div>
+                
                 <div id="login-view">
-                    <form id="login-form"><div class="form-group"><label for="email" class="form-label">Email</label><input type="email" id="email" class="form-control" required value="afaan@s.com"></div><div class="form-group"><label for="password" class="form-label">Password</label><input type="password" id="password" class="form-control" required value="password"></div><button type="submit" class="btn btn-primary">Sign In</button></form>
+                    <form id="login-form"><div class="form-group"><label for="email" class="form-label">Email</label><input type="email" id="email" class="form-control" required value="afaan@s.com"></div><div class="form-group"><label for="password" class="form-label">Password</label><input type="password" id="password" class="form-control" required value="password"></div>
+                    <div style="text-align: right; margin-bottom: 1rem;">
+                        <a href="#" id="forgot-pw-link" style="color: var(--secondary); font-size: 0.9rem; text-decoration: none;">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button></form>
                     <p style="text-align: center; margin-top: 1rem;">Don't have an account? <a href="#" id="show-register-link" style="color: var(--secondary); text-decoration: none;">Sign Up</a></p>
                 </div>
+
                 <div id="register-view" class="hidden">
                     <form id="register-form" novalidate>
                         <div class="form-group"><label for="register-name" class="form-label">Full Name</label><input type="text" id="register-name" class="form-control" required></div>
@@ -189,7 +195,38 @@
                     </form>
                     <p style="text-align: center; margin-top: 1rem;">Already have an account? <a href="#" id="show-login-link" style="color: var(--secondary); text-decoration: none;">Sign In</a></p>
                 </div>
+
                 <div id="otp-view" class="hidden"><p style="text-align: center; margin-bottom: 1rem;">An OTP was sent to <b id="otp-email-display"></b>.</p><form id="otp-form"><div class="form-group"><label for="otp-input" class="form-label">Enter 6-Digit OTP</label><input type="text" id="otp-input" class="form-control" required maxlength="6"></div><button type="submit" class="btn btn-primary">Verify & Register</button></form><p style="text-align: center; margin-top: 1rem;"><a href="#" id="back-to-register-link">Go Back</a> | <a href="#" id="resend-otp-link">Resend OTP</a><span id="resend-timer"></span></p></div>
+
+                <div id="forgot-pw-view" class="hidden">
+                    <h3 style="text-align: center; margin-bottom: 1rem;">Reset Password</h3>
+                    <p style="text-align: center; color: #666; margin-bottom: 1rem; font-size: 0.9rem;">Enter your email to receive a reset code.</p>
+                    <form id="forgot-pw-form">
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" id="fp-email" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Reset OTP</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 1rem;">
+                        <a href="#" class="back-to-login-link" style="color: var(--secondary);">Back to Login</a>
+                    </p>
+                </div>
+
+                <div id="reset-pw-view" class="hidden">
+                    <h3 style="text-align: center; margin-bottom: 1rem;">Create New Password</h3>
+                    <form id="reset-pw-form">
+                        <div class="form-group">
+                            <label class="form-label">Enter 6-Digit OTP</label>
+                            <input type="text" id="fp-otp" class="form-control" maxlength="6" required placeholder="123456">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">New Password</label>
+                            <input type="password" id="fp-new-password" class="form-control" required placeholder="Min 6 chars">
+                        </div>
+                        <button type="submit" class="btn btn-success">Reset Password</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -253,28 +290,59 @@
         return data;
     }
 
-    function bindAuthEventListeners() { getElem('login-page').addEventListener('click', (e) => { if (e.target.id === 'show-register-link') toggleAuthView(e, 'register'); if (e.target.id === 'show-login-link') toggleAuthView(e, 'login'); if (e.target.id === 'back-to-register-link') backToRegister(e); if (e.target.id === 'resend-otp-link') handleResendOtp(e); const roleOption = e.target.closest('.login-option'); if (roleOption) handleRoleSelect(roleOption); }); getElem('login-form').addEventListener('submit', handleLogin); getElem('register-form').addEventListener('submit', handleSendOtp); getElem('otp-form').addEventListener('submit', handleVerifyAndRegister); }
+    // --- UPDATED AUTH EVENT LISTENERS ---
+    function bindAuthEventListeners() { 
+        getElem('login-page').addEventListener('click', (e) => { 
+            if (e.target.id === 'show-register-link') toggleAuthView(e, 'register'); 
+            if (e.target.id === 'show-login-link') toggleAuthView(e, 'login'); 
+            if (e.target.id === 'back-to-register-link') backToRegister(e); 
+            if (e.target.id === 'resend-otp-link') handleResendOtp(e);
+            
+            // New Forgot Password Listeners
+            if (e.target.id === 'forgot-pw-link') toggleAuthView(e, 'forgot');
+            if (e.target.classList.contains('back-to-login-link')) toggleAuthView(e, 'login');
+
+            const roleOption = e.target.closest('.login-option'); 
+            if (roleOption) handleRoleSelect(roleOption); 
+        }); 
+        getElem('login-form').addEventListener('submit', handleLogin); 
+        getElem('register-form').addEventListener('submit', handleSendOtp); 
+        getElem('otp-form').addEventListener('submit', handleVerifyAndRegister);
+        
+        // New Form Listeners
+        getElem('forgot-pw-form').addEventListener('submit', handleForgotPasswordRequest);
+        getElem('reset-pw-form').addEventListener('submit', handleResetPasswordSubmit);
+    }
+
     function handleRoleSelect(element) { document.querySelectorAll('.login-option').forEach(opt => opt.classList.remove('active')); element.classList.add('active'); state.selectedRole = element.dataset.role; const isStudent = state.selectedRole === 'student'; getElem('student-fields').classList.toggle('hidden', !isStudent); getElem('faculty-fields').classList.toggle('hidden', isStudent); getElem('student-fields').querySelectorAll('select').forEach(el => el.disabled = !isStudent); getElem('faculty-fields').querySelectorAll('input, select').forEach(el => el.disabled = isStudent); }
-    function toggleAuthView(e, view) { e.preventDefault(); getElem('login-view').classList.add('hidden'); getElem('register-view').classList.add('hidden'); getElem('otp-view').classList.add('hidden'); if (view === 'login') getElem('login-view').classList.remove('hidden'); if (view === 'register') getElem('register-view').classList.remove('hidden');}
     
-    // --- UPDATED: HANDLE SEND OTP (WITH EMAIL CHECK & ROLE SENDING) ---
+    // --- UPDATED TOGGLE VIEW FUNCTION ---
+    function toggleAuthView(e, view) { 
+        if(e) e.preventDefault(); 
+        getElem('login-view').classList.add('hidden'); 
+        getElem('register-view').classList.add('hidden'); 
+        getElem('otp-view').classList.add('hidden'); 
+        getElem('forgot-pw-view').classList.add('hidden');
+        getElem('reset-pw-view').classList.add('hidden');
+
+        if (view === 'login') getElem('login-view').classList.remove('hidden'); 
+        if (view === 'register') getElem('register-view').classList.remove('hidden');
+        if (view === 'forgot') getElem('forgot-pw-view').classList.remove('hidden');
+        if (view === 'reset') getElem('reset-pw-view').classList.remove('hidden');
+    }
+    
     async function handleSendOtp(e) { 
         e.preventDefault(); 
         const form = e.target; 
         if (!form.checkValidity()) return form.reportValidity(); 
         const email = getElem('register-email').value.trim(); 
-        
-        // CHECK: If role is faculty, ensure email ends with @iust.ac.in
         if (state.selectedRole === 'faculty' && !email.endsWith('@iust.ac.in')) {
             return Swal.fire('Restriction', 'Faculty members must use an official <b>@iust.ac.in</b> email address.', 'error');
         }
-
         const button = form.querySelector('button[type="submit"]'); 
         button.disabled = true; button.textContent = 'Sending...'; 
         try { 
-            // !! IMPORTANT: Send the role to the backend so it can verify !!
             const data = await apiRequest('/auth/send-otp', 'POST', { email, role: state.selectedRole }); 
-            
             tempRegistrationData = { name: getElem('register-name').value, email, password: getElem('register-password').value, phone: getElem('register-phone').value, role: state.selectedRole }; 
             if (state.selectedRole === 'student') { tempRegistrationData.department = getElem('register-department-student').value; tempRegistrationData.yearSemester = getElem('register-year').value; } 
             else { tempRegistrationData.department = getElem('register-department-faculty').value; tempRegistrationData.designation = getElem('register-designation').value; tempRegistrationData.office = getElem('register-office').value; } 
@@ -288,20 +356,60 @@
     function startResendTimer() { const link = getElem('resend-otp-link'), timer = getElem('resend-timer'); let count = 30; link.style.pointerEvents = 'none'; link.style.color = 'var(--gray)'; const interval = setInterval(() => { count--; timer.textContent = ` (${count}s)`; if (count <= 0) { clearInterval(interval); timer.textContent = ''; link.style.pointerEvents = 'auto'; link.style.color = 'var(--secondary)'; } }, 1000); }
     async function handleResendOtp(e) { e.preventDefault(); if (!tempRegistrationData.email) return; try { await apiRequest('/auth/send-otp', 'POST', { email: tempRegistrationData.email, role: state.selectedRole }); Swal.fire('Success', 'A new OTP has been sent.', 'success'); startResendTimer(); } catch (error) { Swal.fire('Error', error.message, 'error'); } }
     
-    // --- UPDATED: HANDLE LOGIN (WITH EMAIL CHECK) ---
     async function handleLogin(e) { 
         e.preventDefault(); 
         const email = getElem('email').value.trim();
-        
-        // CHECK: If logging in as Faculty, enforce domain check locally too
         if (state.selectedRole === 'faculty' && !email.endsWith('@iust.ac.in')) {
             return Swal.fire('Restriction', 'Faculty members must login with an official <b>@iust.ac.in</b> email address.', 'error');
         }
-
         try { 
             const data = await apiRequest('/auth/login', 'POST', { email: email, password: getElem('password').value, role: state.selectedRole }); 
             localStorage.setItem('authToken', data.token); localStorage.setItem('currentUser', JSON.stringify(data.user)); state.currentUser = data.user; await initApp(); 
         } catch (error) { Swal.fire('Login Failed', error.message, 'error'); } 
+    }
+
+    // --- NEW FUNCTIONS: PASSWORD RESET LOGIC ---
+    async function handleForgotPasswordRequest(e) {
+        e.preventDefault();
+        const email = getElem('fp-email').value.trim();
+        if (!email) return Swal.fire('Error', 'Please enter your email.', 'error');
+
+        const btn = e.target.querySelector('button');
+        btn.disabled = true; btn.textContent = 'Sending...';
+
+        try {
+            await apiRequest('/auth/forgot-password', 'POST', { email });
+            Swal.fire('OTP Sent', 'Check your email for the reset code.', 'success');
+            toggleAuthView(null, 'reset'); // Switch to Reset View
+        } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Send Reset OTP';
+        }
+    }
+
+    async function handleResetPasswordSubmit(e) {
+        e.preventDefault();
+        const email = getElem('fp-email').value.trim(); // Reuse email from previous step
+        const otp = getElem('fp-otp').value.trim();
+        const newPassword = getElem('fp-new-password').value;
+
+        if (!otp || !newPassword) return Swal.fire('Error', 'Please fill all fields.', 'error');
+
+        const btn = e.target.querySelector('button');
+        btn.disabled = true; btn.textContent = 'Resetting...';
+
+        try {
+            await apiRequest('/auth/reset-password', 'POST', { email, otp, newPassword });
+            Swal.fire('Success!', 'Password reset successfully. Please login.', 'success');
+            toggleAuthView(null, 'login'); // Go back to login
+            e.target.reset();
+            getElem('forgot-pw-form').reset();
+        } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Reset Password';
+        }
     }
 
     function handleLogout() { localStorage.clear(); window.location.reload(); }
@@ -351,7 +459,6 @@
             }
             return `<tr><td>${participantName}</td><td>${app.purpose}</td><td>${app.date} at ${app.time}</td><td><span class="status ${app.status.toLowerCase()}">${app.status}</span></td>${isUserFaculty ? `<td>${actions}</td>` : ''}</tr>`;
         }).join('');
-        // Add table-wrapper for mobile scroll
         container.innerHTML = `<div class="table-wrapper"><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
 
