@@ -148,51 +148,6 @@
             .content { padding: 1.5rem 1rem; }
         }
 
-        @media (max-width: 600px) {
-            /* Force table rows into cards on phone view */
-            #appointments-list table, 
-            #appointments-list thead, 
-            #appointments-list tbody, 
-            #appointments-list th, 
-            #appointments-list td, 
-            #appointments-list tr { 
-                display: block; 
-            }
-            #appointments-list thead tr { 
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-            #appointments-list tr {
-                border: 1px solid var(--border-color);
-                margin-bottom: 1rem;
-                border-radius: 8px;
-                padding: 0.5rem;
-                background: white;
-            }
-            #appointments-list td { 
-                border: none;
-                border-bottom: 1px solid #eee; 
-                position: relative;
-                padding-left: 50% !important; 
-                text-align: right !important;
-                min-height: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-            }
-            #appointments-list td:before { 
-                position: absolute;
-                left: 10px;
-                width: 45%; 
-                padding-right: 10px; 
-                white-space: nowrap;
-                text-align: left;
-                font-weight: bold;
-                content: attr(data-label);
-            }
-        }
-
         @media (max-width: 480px) {
             .login-container { padding: 1.5rem 1rem; }
             .login-options { flex-direction: column; gap: 0.5rem; }
@@ -495,7 +450,6 @@
         if (!container || state.appointments.length === 0) { container.innerHTML = '<p>No appointments found.</p>'; return; }
         const isUserFaculty = state.currentUser.role === 'faculty';
         let headers = `<th>Participant</th><th>Purpose</th><th>Date & Time</th><th>Status</th>${isUserFaculty ? `<th>Actions</th>` : ''}`;
-        
         const rows = state.appointments.map(app => {
             const isRequester = app.studentId === state.currentUser.id;
             const participantName = isRequester ? app.facultyName : app.studentName;
@@ -504,15 +458,7 @@
                 if (app.status === 'pending') actions = `<div class="action-buttons"><button class="btn-sm btn-success status-btn" data-id="${app.id}" data-status="approved">Approve</button><button class="btn-sm btn-danger status-btn" data-id="${app.id}" data-status="rejected">Reject</button><button class="btn-sm btn-warning reschedule-btn" data-id="${app.id}">Reschedule</button></div>`;
                 else if (app.status === 'approved' || app.status === 'rescheduled') actions = `<div class="action-buttons"><button class="btn-sm btn-warning reschedule-btn" data-id="${app.id}">Reschedule</button></div>`;
             }
-            
-            // Added data-label attributes for mobile "Card" layout
-            return `<tr>
-                <td data-label="Participant">${participantName}</td>
-                <td data-label="Purpose">${app.purpose || 'N/A'}</td>
-                <td data-label="Date & Time">${app.date} at ${app.time}</td>
-                <td data-label="Status"><span class="status ${app.status.toLowerCase()}">${app.status}</span></td>
-                ${isUserFaculty ? `<td data-label="Actions">${actions}</td>` : ''}
-            </tr>`;
+            return `<tr><td>${participantName}</td><td>${app.purpose}</td><td>${app.date} at ${app.time}</td><td><span class="status ${app.status.toLowerCase()}">${app.status}</span></td>${isUserFaculty ? `<td>${actions}</td>` : ''}</tr>`;
         }).join('');
         container.innerHTML = `<div class="table-wrapper"><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
