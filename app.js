@@ -1,3 +1,9 @@
+// NOTE: As of the current index.html, this file is NOT loaded by the page —
+// index.html has its own inline <script> that handles login, OTP, and the
+// dashboard, with its own (correct) API_BASE_URL pointing at the deployed
+// Render backend. This file is kept here fixed and ready in case it's wired
+// back in later, but it currently has no effect on the live app.
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const errorMessage = document.getElementById('error-message');
@@ -5,13 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashboardContainer = document.getElementById('dashboard-container');
     const welcomeMessage = document.getElementById('welcome-message');
     const logoutButton = document.getElementById('logout-button');
-    
-    // --- NEW: Base URL for API calls ---
-    const API_BASE_URL = 'http://localhost3000/api';
+
+    // --- FIXED: was missing the colon before the port ---
+    const API_BASE_URL = 'http://localhost:3000/api';
 
     const getRole = () => document.getElementById('role') ? document.getElementById('role').value : 'student';
 
-    // --- NEW: Calendar Loader Function ---
+    // --- Calendar Loader Function ---
     async function loadCalendarEvents() {
         const token = localStorage.getItem('authToken');
         if (!token) return [];
@@ -20,15 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_BASE_URL}/appointments`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             if (!response.ok) throw new Error('Failed to fetch appointments');
-            
+
             const appointments = await response.json();
 
             return appointments.map(app => ({
-                title: app.purpose, 
-                start: `${app.date}T${app.time}`, 
-                backgroundColor: app.status === 'approved' ? '#4f46e5' : '#f59e0b', 
+                title: app.purpose,
+                start: `${app.date}T${app.time}`,
+                backgroundColor: app.status === 'approved' ? '#4f46e5' : '#f59e0b',
                 allDay: false
             }));
         } catch (error) {
@@ -39,12 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        
+
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const role = getRole();
-        
-        errorMessage.textContent = ''; 
+
+        errorMessage.textContent = '';
 
         try {
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -62,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // SUCCESS
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('currentUser', JSON.stringify(data.user));
-            
+
             loginContainer.classList.add('hidden');
             dashboardContainer.classList.remove('hidden');
             welcomeMessage.textContent = `Welcome, ${data.user.name}! (Role: ${data.user.role})`;
@@ -85,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginContainer.classList.remove('hidden');
         welcomeMessage.textContent = '';
     });
-    
+
     // Check if user is already logged in on page load
     const token = localStorage.getItem('authToken');
     const user = localStorage.getItem('currentUser');
@@ -94,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardContainer.classList.remove('hidden');
         const userData = JSON.parse(user);
         welcomeMessage.textContent = `Welcome back, ${userData.name}! (Role: ${userData.role})`;
-        
+
         // --- TRIGGER CALENDAR LOAD FOR RETURNING USER ---
         loadCalendarEvents().then(events => console.log('Restored Events:', events));
     }

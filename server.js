@@ -95,8 +95,9 @@ const pool = new Pool({
 });
 console.log('PostgreSQL Connection Pool created.');
 
-// --- In-Memory OTP Storage (For Registration) ---
-const otpStore = {};
+// Registration OTPs are now stored in the `registration_otps` table (see
+// add_registration_otps_table.sql) instead of an in-memory object, so they
+// survive server restarts/redeploys on Render.
 
 // --- Helper function to validate appointment times against business rules ---
 const isAppointmentTimeValid = (date, time) => {
@@ -189,7 +190,12 @@ app.post('/api/auth/send-otp', async (req, res) => {
             return res.status(400).json({ message: 'User with this email already exists.' });
         }
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+        await pool.query('DELETE FROM registration_otps WHERE email = $1', [email]);
+        await pool.query(
+            'INSERT INTO registration_otps (email, otp, expires_at) VALUES ($1, $2, $3)',
+            [email, otp, expiresAt]
+        );
         await sendMail({
             to: email,
             subject: 'Your OTP for IUST Appointment Portal',
@@ -211,8 +217,11 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     try {
-        const storedOtpData = otpStore[email];
-        if (!storedOtpData || Date.now() > storedOtpData.expires || storedOtpData.otp !== otp) {
+        const otpCheck = await pool.query(
+            'SELECT * FROM registration_otps WHERE email = $1 AND otp = $2 AND expires_at > NOW()',
+            [email, otp]
+        );
+        if (otpCheck.rows.length === 0) {
             return res.status(400).json({ message: 'Invalid or expired OTP.' });
         }
         const salt = await bcrypt.genSalt(10);
@@ -232,7 +241,7 @@ app.post('/api/auth/register', async (req, res) => {
                 await client.query('INSERT INTO faculty_profiles (user_id) VALUES ($1)', [newUser.id]);
             }
             await client.query('COMMIT');
-            delete otpStore[email];
+            await pool.query('DELETE FROM registration_otps WHERE email = $1', [email]);
             res.status(201).json({ message: 'Registration successful' });
         } catch (error) {
             await client.query('ROLLBACK');
