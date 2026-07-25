@@ -44,23 +44,27 @@ const upload = multer({
     }
 });
 
-// --- Nodemailer Setup (Brevo SMTP Transporter) ---
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false, // Use false for 587
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        // This is necessary to prevent timeouts on cloud servers
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-    },
-    connectionTimeout: 20000 // Give it 20 seconds
-});
-console.log('Nodemailer transporter configured with Brevo SMTP settings.');
+// --- Brevo Transactional Email Setup (HTTP API, NOT SMTP) ---
+// Render's free tier blocks outbound SMTP ports (25/465/587), so we use
+// Brevo's HTTPS API (port 443) instead of nodemailer+SMTP.
+// Using @getbrevo/brevo v6+ API (BrevoClient).
+const { BrevoClient } = require('@getbrevo/brevo');
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+
+/**
+ * Send an email via Brevo's HTTP API.
+ * Drop-in replacement for the old transporter.sendMail({ from, to, subject, text, html }).
+ */
+async function sendMail({ to, subject, text, html }) {
+    return brevo.transactionalEmails.sendTransacEmail({
+        sender: { name: 'IUST Portal', email: SENDER_EMAIL },
+        to: [{ email: to }],
+        subject,
+        ...(html ? { htmlContent: html } : {}),
+        ...(text ? { textContent: text } : {})
+    });
+}
+console.log('Brevo transactional email API configured.');
 
 // --- Sender Address Constant ---
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'iustappointmentportal@gmail.com';
@@ -186,13 +190,11 @@ app.post('/api/auth/send-otp', async (req, res) => {
         }
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
-        const mailOptions = { 
-            from: `"IUST Portal" <${SENDER_EMAIL}>`, 
-            to: email, 
-            subject: 'Your OTP for IUST Appointment Portal', 
-            text: `Your One-Time Password is: ${otp}\n\nThis OTP is valid for 5 minutes.` 
-        };
-        await transporter.sendMail(mailOptions);
+        await sendMail({
+            to: email,
+            subject: 'Your OTP for IUST Appointment Portal',
+            text: `Your One-Time Password is: ${otp}\n\nThis OTP is valid for 5 minutes.`
+        });
         res.status(200).json({ message: 'OTP sent successfully to your email.' });
     } catch (error) {
         console.error('Error in send-otp:', error);
@@ -271,9 +273,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             [email, otp, expiresAt]
         );
 
-        // Send Email using Brevo Transporter
-        await transporter.sendMail({
-            from: `"IUST Portal" <${SENDER_EMAIL}>`,
+        // Send Email using Brevo HTTP API
+        await sendMail({
             to: email,
             subject: 'Reset Your Password - IUST Portal',
             text: `Your OTP for password reset is: ${otp}\n\nThis code expires in 10 minutes.`,
@@ -587,8 +588,11 @@ app.post('/api/appointments/:id/reschedule', authMiddleware, async (req, res) =>
         
         if (studentResult.rows.length > 0) {
             const student = studentResult.rows[0];
-            const mailOptions = { from: `"IUST Portal" <${SENDER_EMAIL}>`, to: student.email, subject: 'Important: Your Appointment has been Rescheduled', text: `Hello ${student.name},\n\nYour appointment with ${req.user.name} regarding "${appointment.purpose}" has been rescheduled.\n\nNew Date: ${date}\nNew Time: ${time}\n\nPlease log in to the portal to view details.\n\nThank you.`};
-            await transporter.sendMail(mailOptions);
+            await sendMail({
+                to: student.email,
+                subject: 'Important: Your Appointment has been Rescheduled',
+                text: `Hello ${student.name},\n\nYour appointment with ${req.user.name} regarding "${appointment.purpose}" has been rescheduled.\n\nNew Date: ${date}\nNew Time: ${time}\n\nPlease log in to the portal to view details.\n\nThank you.`
+            });
         }
         res.json({ message: 'Appointment rescheduled and student notified!', appointment });
     } catch (error) {
