@@ -48,16 +48,17 @@ const upload = multer({
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // MUST be true for 465
+    secure: true, // Port 465 uses secure: true
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        // This prevents the "Connection Timeout" on many cloud servers
-        rejectUnauthorized: false
+        // This is the CRITICAL part for cloud servers:
+        rejectUnauthorized: false,
+        servername: 'smtp.gmail.com'
     },
-    connectionTimeout: 10000 // 10 seconds
+    connectionTimeout: 15000 // Increase to 15 seconds
 });
 console.log('Nodemailer transporter configured with custom SMTP settings.');
 
