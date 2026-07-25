@@ -44,23 +44,20 @@ const upload = multer({
     }
 });
 
-// --- Nodemailer Setup (Updated with explicit SSL host, port & connectionTimeout) ---
+// --- Nodemailer Setup (Brevo SMTP Transporter) ---
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Port 465 uses secure: true
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false, // Use false for port 587
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        // This is the CRITICAL part for cloud servers:
-        rejectUnauthorized: false,
-        servername: 'smtp.gmail.com'
-    },
-    connectionTimeout: 15000 // Increase to 15 seconds
+        user: process.env.EMAIL_USER, // Brevo Login Email / Account ID
+        pass: process.env.EMAIL_PASS   // Generated Brevo SMTP Key
+    }
 });
-console.log('Nodemailer transporter configured with custom SMTP settings.');
+console.log('Nodemailer transporter configured with Brevo SMTP settings.');
+
+// --- Sender Address Constant ---
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'iustappointmentportal@gmail.com';
 
 // --- Google OAuth2 Client ---
 // This client will be used to interact with the Google Calendar API
@@ -167,7 +164,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// --- UPDATED: SEND-OTP ROUTE (Improved Detailed Error Logging) ---
+// --- SEND-OTP ROUTE ---
 app.post('/api/auth/send-otp', async (req, res) => {
     const { email, role } = req.body;
 
@@ -184,7 +181,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
         const mailOptions = { 
-            from: process.env.EMAIL_USER, 
+            from: `"IUST Portal" <${SENDER_EMAIL}>`, 
             to: email, 
             subject: 'Your OTP for IUST Appointment Portal', 
             text: `Your One-Time Password is: ${otp}\n\nThis OTP is valid for 5 minutes.` 
@@ -192,8 +189,8 @@ app.post('/api/auth/send-otp', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.status(200).json({ message: 'OTP sent successfully to your email.' });
     } catch (error) {
-        console.error('Error in send-otp:', error); // Check Render/server logs for details
-        res.status(500).json({ message: error.message }); // Returns exact error message to help debug
+        console.error('Error in send-otp:', error);
+        res.status(500).json({ message: error.message });
     }
 });
 
@@ -268,9 +265,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             [email, otp, expiresAt]
         );
 
-        // Send Email using existing Transporter
+        // Send Email using Brevo Transporter
         await transporter.sendMail({
-            from: `"IUST Portal" <${process.env.EMAIL_USER}>`,
+            from: `"IUST Portal" <${SENDER_EMAIL}>`,
             to: email,
             subject: 'Reset Your Password - IUST Portal',
             text: `Your OTP for password reset is: ${otp}\n\nThis code expires in 10 minutes.`,
@@ -286,8 +283,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     } catch (err) {
         console.error('Forgot Password Error:', err);
-        // This will send the ACTUAL error (e.g., "Invalid Login" or "Database Error") 
-        // to your browser so you can see it in the alert.
         res.status(500).json({ message: "Server Error: " + err.message });
     }
 });
@@ -586,7 +581,7 @@ app.post('/api/appointments/:id/reschedule', authMiddleware, async (req, res) =>
         
         if (studentResult.rows.length > 0) {
             const student = studentResult.rows[0];
-            const mailOptions = { from: process.env.EMAIL_USER, to: student.email, subject: 'Important: Your Appointment has been Rescheduled', text: `Hello ${student.name},\n\nYour appointment with ${req.user.name} regarding "${appointment.purpose}" has been rescheduled.\n\nNew Date: ${date}\nNew Time: ${time}\n\nPlease log in to the portal to view details.\n\nThank you.`};
+            const mailOptions = { from: `"IUST Portal" <${SENDER_EMAIL}>`, to: student.email, subject: 'Important: Your Appointment has been Rescheduled', text: `Hello ${student.name},\n\nYour appointment with ${req.user.name} regarding "${appointment.purpose}" has been rescheduled.\n\nNew Date: ${date}\nNew Time: ${time}\n\nPlease log in to the portal to view details.\n\nThank you.`};
             await transporter.sendMail(mailOptions);
         }
         res.json({ message: 'Appointment rescheduled and student notified!', appointment });
