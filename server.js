@@ -44,15 +44,19 @@ const upload = multer({
     }
 });
 
-// --- Nodemailer Setup (Updated to Gmail Service) ---
+// --- Nodemailer Setup (Updated with explicit SSL host, port & connectionTimeout) ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for 465, false for 587
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        pass: process.env.EMAIL_PASS,
     },
+    // Add a timeout setting so it doesn't hang forever
+    connectionTimeout: 10000, // 10 seconds
 });
-console.log('Nodemailer transporter configured for Gmail.');
+console.log('Nodemailer transporter configured with custom SMTP settings.');
 
 // --- Google OAuth2 Client ---
 // This client will be used to interact with the Google Calendar API
