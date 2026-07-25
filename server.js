@@ -44,15 +44,15 @@ const upload = multer({
     }
 });
 
-// --- Nodemailer Setup ---
+// --- Nodemailer Setup (Updated to Gmail Service) ---
 const transporter = nodemailer.createTransport({
-    // Using environment variables for host/port to support Brevo or Gmail
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com', 
-    port: process.env.EMAIL_PORT || 587, 
-    secure: false,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
 });
-console.log('Nodemailer transporter configured.');
+console.log('Nodemailer transporter configured for Gmail.');
 
 // --- Google OAuth2 Client ---
 // This client will be used to interact with the Google Calendar API
@@ -159,8 +159,9 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// --- UPDATED: SEND-OTP ROUTE (Improved Detailed Error Logging) ---
 app.post('/api/auth/send-otp', async (req, res) => {
-    const { email, role } = req.body; // <--- Get role from request
+    const { email, role } = req.body;
 
     // --- SECURITY CHECK: Block OTP for non-IUST Faculty emails ---
     if (role === 'faculty' && !email.endsWith('@iust.ac.in')) {
@@ -174,12 +175,17 @@ app.post('/api/auth/send-otp', async (req, res) => {
         }
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
-        const mailOptions = { from: process.env.EMAIL_USER, to: email, subject: 'Your OTP for IUST Appointment Portal', text: `Your One-Time Password is: ${otp}\n\nThis OTP is valid for 5 minutes.` };
+        const mailOptions = { 
+            from: process.env.EMAIL_USER, 
+            to: email, 
+            subject: 'Your OTP for IUST Appointment Portal', 
+            text: `Your One-Time Password is: ${otp}\n\nThis OTP is valid for 5 minutes.` 
+        };
         await transporter.sendMail(mailOptions);
         res.status(200).json({ message: 'OTP sent successfully to your email.' });
     } catch (error) {
-        console.error('Error in send-otp:', error);
-        res.status(500).json({ message: 'Error sending OTP. Please try again later.' });
+        console.error('Error in send-otp:', error); // Check Render/server logs for details
+        res.status(500).json({ message: error.message }); // Returns exact error message to help debug
     }
 });
 
@@ -229,7 +235,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// --- NEW: FORGOT PASSWORD (REQUEST OTP) ---
+// --- FORGOT PASSWORD (REQUEST OTP) ---
 app.post('/api/auth/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
@@ -254,7 +260,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             [email, otp, expiresAt]
         );
 
-        // Send Email using your existing Transporter
+        // Send Email using existing Transporter
         await transporter.sendMail({
             from: `"IUST Portal" <${process.env.EMAIL_USER}>`,
             to: email,
@@ -276,7 +282,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 });
 
-// --- NEW: RESET PASSWORD (VERIFY & UPDATE) ---
+// --- RESET PASSWORD (VERIFY & UPDATE) ---
 app.post('/api/auth/reset-password', async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
@@ -406,7 +412,6 @@ app.put('/api/faculty/profile/availability', authMiddleware, async (req, res) =>
 
 // --- GOOGLE CALENDAR & APPOINTMENT APIS ---
 app.get('/api/auth/google', authMiddleware, (req, res) => {
-    // This endpoint initiates the Google OAuth flow for a faculty member.
     if (req.user.role !== 'faculty') {
         return res.status(403).send('Only faculty can link their Google Calendar.');
     }
@@ -420,7 +425,6 @@ app.get('/api/auth/google', authMiddleware, (req, res) => {
 });
 
 app.get('/api/auth/google/callback', async (req, res) => {
-    // Google redirects here after the user grants permission.
     const { code, state: userId } = req.query;
     try {
         const { tokens } = await oauth2Client.getToken(code);
@@ -430,9 +434,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
             return res.status(400).send('Could not get a refresh token from Google. Please remove app access from your Google account settings and try again.');
         }
 
-        // Securely store the refresh token in the database for the specific faculty member.
         await pool.query('UPDATE faculty_profiles SET google_refresh_token = $1 WHERE user_id = $2', [refreshToken, parseInt(userId, 10)]);
-        res.redirect('/#profile'); // Redirect the user back to their profile page.
+        res.redirect('/#profile');
     } catch (error) {
         console.error('Error during Google OAuth callback:', error);
         res.status(500).send('Failed to authenticate with Google.');
@@ -452,11 +455,10 @@ app.get('/api/appointments', authMiddleware, async (req, res) => {
         `;
         const queryParams = [];
 
-        // Faculty can now book appointments with other faculty, so their view shows all appointments they are involved in.
         if (role === 'faculty') {
             queryText += ' WHERE (a.student_id = $1 OR a.faculty_id = $1) ORDER BY a.created_at DESC';
             queryParams.push(userId);
-        } else { // Students see only the appointments they have booked.
+        } else {
             queryText += ' WHERE a.student_id = $1 ORDER BY a.created_at DESC';
             queryParams.push(userId);
         }
@@ -484,7 +486,6 @@ app.post('/api/appointments', authMiddleware, async (req, res) => {
         const newAppointment = result.rows[0];
         res.status(201).json({ message: 'Appointment created successfully', appointment: newAppointment });
 
-        // Create Google Calendar event in the background without blocking the response
         createGoogleCalendarEvent(newAppointment, req.user.id, facultyId)
             .catch(calendarError => console.error('Failed to create Google Calendar event in the background:', calendarError));
 
@@ -509,7 +510,7 @@ async function createGoogleCalendarEvent(appointment, studentId, facultyId) {
             const studentEmail = student.rows[0].email;
             
             const startTime = new Date(`${appointment.date}T${appointment.time}:00`);
-            const endTime = new Date(startTime.getTime() + 30 * 60000); // Assume 30-minute duration
+            const endTime = new Date(startTime.getTime() + 30 * 60000); // 30-minute duration
 
             const event = {
                 summary: `Appointment: ${studentName}`,
@@ -530,7 +531,6 @@ async function createGoogleCalendarEvent(appointment, studentId, facultyId) {
         console.error('Failed to create Google Calendar event:', calendarError.message);
     }
 }
-
 
 app.post('/api/appointments/:id/status', authMiddleware, async (req, res) => {
     if (req.user.role !== 'faculty') {
@@ -585,7 +585,6 @@ app.post('/api/appointments/:id/reschedule', authMiddleware, async (req, res) =>
         res.status(500).json({ message: 'Error rescheduling appointment.' });
     }
 });
-
 
 // --- Serve Frontend ---
 app.get('*', (req, res) => {
