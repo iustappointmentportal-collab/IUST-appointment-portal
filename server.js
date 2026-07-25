@@ -378,8 +378,28 @@ app.get('/api/users/profile', authMiddleware, async (req, res) => {
 app.put('/api/users/profile', authMiddleware, async (req, res) => {
     const { name, phone, department, yearSemester, designation, office } = req.body;
     try {
-        const result = await pool.query( `UPDATE users SET name = $1, phone = $2, department = $3, year_semester = $4, designation = $5, office = $6 WHERE id = $7 RETURNING *`,
-            [name, phone, department, yearSemester, designation, office, req.user.id]
+        // Use COALESCE so fields not included in this request (e.g. a GPS-only
+        // update that only sends `office`) keep their existing value instead of
+        // being overwritten with NULL — and so `undefined` never reaches the
+        // pg driver, which rejects undefined query parameters outright.
+        const result = await pool.query(
+            `UPDATE users SET
+                name = COALESCE($1, name),
+                phone = COALESCE($2, phone),
+                department = COALESCE($3, department),
+                year_semester = COALESCE($4, year_semester),
+                designation = COALESCE($5, designation),
+                office = COALESCE($6, office)
+             WHERE id = $7 RETURNING *`,
+            [
+                name ?? null,
+                phone ?? null,
+                department ?? null,
+                yearSemester ?? null,
+                designation ?? null,
+                office ?? null,
+                req.user.id
+            ]
         );
         const updatedUser = result.rows[0];
         delete updatedUser.password;
