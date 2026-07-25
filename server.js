@@ -48,11 +48,17 @@ const upload = multer({
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 587,
-    secure: false, // Use false for port 587
+    secure: false, // Use false for 587
     auth: {
-        user: process.env.EMAIL_USER, // Brevo Login Email / Account ID
-        pass: process.env.EMAIL_PASS   // Generated Brevo SMTP Key
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        // This is necessary to prevent timeouts on cloud servers
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
+    },
+    connectionTimeout: 20000 // Give it 20 seconds
 });
 console.log('Nodemailer transporter configured with Brevo SMTP settings.');
 
