@@ -4,7 +4,6 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const nodemailer = require('nodemailer');
 const multer = require('multer');
 const fs = require('fs');
 require('dotenv').config(); // Must be at the very top
@@ -81,7 +80,22 @@ const oauth2Client = new google.auth.OAuth2(
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// --- CORS: only allow requests from the actual frontend origins ---
+// (previously app.use(cors()) allowed ANY website to call this API)
+const allowedOrigins = [
+    'https://iust-portal-project.onrender.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+];
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. curl, server-to-server, same-origin page loads)
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        callback(new Error('Not allowed by CORS'));
+    }
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 // Serve uploaded avatars statically so they can be accessed from the browser via a URL
@@ -125,10 +139,9 @@ const authMiddleware = (req, res, next) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.split(' ')[1];
     }
-    // Fallback for cases where token is passed as a query parameter (e.g., links)
-    else if (req.query.token) {
-        token = req.query.token;
-    }
+    // NOTE: previously also accepted ?token=... in the URL as a fallback.
+    // Removed — tokens in URLs end up in server logs, browser history, and
+    // referrer headers. The frontend doesn't rely on this, so it's safe to drop.
 
     if (!token) {
         return res.status(401).json({ message: 'Authorization denied. No token provided.' });
@@ -520,6 +533,16 @@ app.post('/api/appointments', authMiddleware, async (req, res) => {
     }
 
     try {
+        // Prevent double-booking: reject if this faculty member already has a
+        // pending or approved appointment at this exact date + time.
+        const conflictCheck = await pool.query(
+            `SELECT id FROM appointments WHERE faculty_id = $1 AND date = $2 AND time = $3 AND status IN ('pending', 'approved')`,
+            [facultyId, date, time]
+        );
+        if (conflictCheck.rows.length > 0) {
+            return res.status(409).json({ message: 'This time slot is already booked. Please choose a different time.' });
+        }
+
         const result = await pool.query(
             `INSERT INTO appointments (student_id, faculty_id, purpose, date, time, status) VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
             [req.user.id, facultyId, purpose, date, time]
@@ -606,6 +629,15 @@ app.post('/api/appointments/:id/reschedule', authMiddleware, async (req, res) =>
     }
 
     try {
+        // Prevent rescheduling into a slot this faculty member already has booked.
+        const conflictCheck = await pool.query(
+            `SELECT id FROM appointments WHERE faculty_id = $1 AND date = $2 AND time = $3 AND status IN ('pending', 'approved') AND id != $4`,
+            [req.user.id, date, time, appointmentId]
+        );
+        if (conflictCheck.rows.length > 0) {
+            return res.status(409).json({ message: 'You already have another appointment at that time. Please choose a different time.' });
+        }
+
         const result = await pool.query(
             `UPDATE appointments SET status = 'rescheduled', date = $1, time = $2 WHERE id = $3 AND faculty_id = $4 RETURNING id, student_id, purpose`,
             [date, time, appointmentId, req.user.id]
