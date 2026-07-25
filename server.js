@@ -48,13 +48,16 @@ const upload = multer({
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // true for 465, false for 587
+    secure: true, // MUST be true for 465
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        pass: process.env.EMAIL_PASS
     },
-    // Add a timeout setting so it doesn't hang forever
-    connectionTimeout: 10000, // 10 seconds
+    tls: {
+        // This prevents the "Connection Timeout" on many cloud servers
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 10000 // 10 seconds
 });
 console.log('Nodemailer transporter configured with custom SMTP settings.');
 
@@ -282,7 +285,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     } catch (err) {
         console.error('Forgot Password Error:', err);
-        res.status(500).json({ message: 'Server error sending OTP.' });
+        // This will send the ACTUAL error (e.g., "Invalid Login" or "Database Error") 
+        // to your browser so you can see it in the alert.
+        res.status(500).json({ message: "Server Error: " + err.message });
     }
 });
 

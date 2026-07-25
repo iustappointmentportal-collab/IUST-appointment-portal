@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logout-button');
     
     // --- NEW: Base URL for API calls ---
-    const API_BASE_URL = 'http://localhost:3000/api';
+    const API_BASE_URL = 'http://localhost3000/api';
 
     const getRole = () => document.getElementById('role') ? document.getElementById('role').value : 'student';
 
